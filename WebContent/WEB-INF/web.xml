@@ -7,4 +7,13 @@
     <welcome-file>index.jsp</welcome-file>
     <welcome-file>login.jsp</welcome-file>
   </welcome-file-list>
+  
+  <servlet>
+    <servlet-name>coeditor</servlet-name>
+    <servlet-class>coeditor.CoeditorWebSocketServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>coeditor</servlet-name>
+    <url-pattern>/coeditor</url-pattern>
+  </servlet-mapping>
 </web-app>
