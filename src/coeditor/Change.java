@@ -30,7 +30,10 @@ public class Change {
 	}
 	
 	public Change(int begin, int end) {
-		this.content = begin + "-" + end;	
+		if (end == begin)
+			this.content = Integer.toString(begin);
+		else
+			this.content = begin + "-" + end;
 		this.length = end - begin + 1;
 		this.type = Change.OLD;
 	}

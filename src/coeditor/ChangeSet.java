@@ -69,7 +69,7 @@ public class ChangeSet {
 				if (sc.type == Change.NEW) {
 					content = Character.toString(sc.c);
 				} else if (sc.type == Change.OLD) {
-					begin = sc.pos;
+					begin = end = sc.pos;
 				} else {}
 				type = sc.type;
 			} else {
@@ -84,7 +84,7 @@ public class ChangeSet {
 						content = Character.toString(sc.c);
 					} else if (sc.type == Change.OLD) {
 						changeList.add(new Change(content));
-						begin = sc.pos;
+						begin = end = sc.pos;
 					} else {}
 					type = sc.type;
 				}
@@ -149,9 +149,45 @@ public class ChangeSet {
 	}
 	
 	public static ChangeSet follows(ChangeSet a, ChangeSet b) {
-		ChangeSet followSet = new ChangeSet();
+		SingleChange[] unzippedA = a.unzip();
+		SingleChange[] unzippedB = b.unzip();
+		ArrayList<SingleChange> followSet = new ArrayList<SingleChange> ();
 		
-		return followSet;
+		int commonLength = Math.min(unzippedA.length, unzippedB.length);
+		for (int i = 0; i < commonLength; i++) {
+			SingleChange lhs = unzippedA[i];
+			SingleChange rhs = unzippedB[i];
+			
+			if (lhs.type == Change.NEW && rhs.type == Change.NEW) {
+				if (lhs.c > rhs.c) {
+					followSet.add(rhs);
+					followSet.add(new SingleChange(i));
+				} else {
+					followSet.add(new SingleChange(i));
+					followSet.add(rhs);
+				}
+			} else if (lhs.type == Change.NEW && rhs.type == Change.OLD) {
+				followSet.add(new SingleChange(i));
+			} else if (lhs.type == Change.OLD && rhs.type == Change.NEW) {
+				followSet.add(rhs);
+			} else {
+				if (lhs.pos == rhs.pos) {
+					followSet.add(lhs);
+				}
+			}
+		}
+
+		for (int i = commonLength; i < unzippedA.length; i++)
+			if (unzippedA[i].type == Change.NEW)
+				followSet.add(new SingleChange(i));
+		
+		for (int i = commonLength; i < unzippedA.length; i++)
+			if (unzippedB[i].type == Change.NEW)
+				followSet.add(unzippedB[i]);
+		
+		int followsOldLength = a.newLength;
+		int followsNewLength = followSet.size();
+		return new ChangeSet(followsOldLength, followsNewLength, followSet);
 	}
 	
 	public String toString() {
@@ -178,7 +214,11 @@ public class ChangeSet {
 		System.out.println("B: " + b);
 		
 		ChangeSet merged = ChangeSet.merge(a, b);
-		
 		System.out.println("m(A, B): " + merged.toString());
+		
+		ChangeSet fab = ChangeSet.follows(a, b);
+		System.out.println("f(A, B): " + fab.toString());
+		ChangeSet fba = ChangeSet.follows(b, a);
+		System.out.println("f(B, A): " + fba.toString());
 	}
 }
