@@ -4,3 +4,4 @@ a.out
 .project
 .classpath
 .settings/
+.DS_Store
