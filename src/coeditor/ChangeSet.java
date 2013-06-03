@@ -58,7 +58,6 @@ public class ChangeSet {
 		if (singleChangeList.size() == 0)
 			return changeList;
 		
-		Change c = null;
 		boolean first = true;
 		int type = -1;
 		int begin = 0, end = 0;
@@ -137,7 +136,7 @@ public class ChangeSet {
 		for (int i = commonLength; i < unzippedA.length; i++)
 			merged.add(unzippedA[i]);
 		
-		for (int i = commonLength; i < unzippedA.length; i++)
+		for (int i = commonLength; i < unzippedB.length; i++)
 			merged.add(unzippedA[i]);
 		
 		int mergedOldLength = a.oldLength;
@@ -181,7 +180,7 @@ public class ChangeSet {
 			if (unzippedA[i].type == Change.NEW)
 				followSet.add(new SingleChange(i));
 		
-		for (int i = commonLength; i < unzippedA.length; i++)
+		for (int i = commonLength; i < unzippedB.length; i++)
 			if (unzippedB[i].type == Change.NEW)
 				followSet.add(unzippedB[i]);
 		
@@ -190,9 +189,25 @@ public class ChangeSet {
 		return new ChangeSet(followsOldLength, followsNewLength, followSet);
 	}
 	
+	public static ChangeSet composition(ChangeSet a, ChangeSet b) {
+		SingleChange[] unzippedA = a.unzip();
+		SingleChange[] unzippedB = b.unzip();
+		ArrayList<SingleChange> compositionSet = new ArrayList<SingleChange> ();
+		
+		for (SingleChange sc : unzippedB) {
+			if (sc.type == Change.NEW)
+				compositionSet.add(sc);
+			else if (sc.type == Change.OLD)
+				compositionSet.add(unzippedA[sc.pos]);
+		}
+		
+		return new ChangeSet(a.oldLength, b.newLength, compositionSet);
+	}
+	
 	public String toString() {
 		String out = "";
-		out = "(" + this.oldLength + " -> " + this.newLength + ") " + this.changeList.toString();
+		out = "(" + this.oldLength + " -> " + this.newLength + ") " + 
+				this.changeList.toString();
 		
 		return out;
 	}
@@ -220,5 +235,11 @@ public class ChangeSet {
 		System.out.println("f(A, B): " + fab.toString());
 		ChangeSet fba = ChangeSet.follows(b, a);
 		System.out.println("f(B, A): " + fba.toString());
+		
+		ChangeSet ab = ChangeSet.composition(a, fab);
+		System.out.println("Af(A, B): " + ab.toString());
+
+		ChangeSet ba = ChangeSet.composition(b, fba);
+		System.out.println("Bf(B, A): " + ba.toString());
 	}
 }
