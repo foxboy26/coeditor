@@ -16,4 +16,13 @@
     <servlet-name>coeditor</servlet-name>
     <url-pattern>/coeditor</url-pattern>
   </servlet-mapping>
+  
+  <servlet>
+    <servlet-name>chat</servlet-name>
+    <servlet-class>coeditor.ChatWebSocketServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>chat</servlet-name>
+    <url-pattern>/chat</url-pattern>
+  </servlet-mapping>
 </web-app>

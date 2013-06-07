@@ -80,9 +80,9 @@
 
         Chat.initialize = function() {
             if (window.location.protocol == 'http:') {
-                Chat.connect('ws://' + window.location.host + '/chat/chat');
+                Chat.connect('ws://' + window.location.host + '/coeditor/chat');
             } else {
-                Chat.connect('wss://' + window.location.host + '/chat/chat');
+                Chat.connect('wss://' + window.location.host + '/coeditor/chat');
             }
         };
 
