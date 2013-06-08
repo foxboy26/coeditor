@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <jsp:include page="common/header.jsp" />
-
+<script src="js/coeditor.js"></script>
 <body>
 
 <%@ page language="java" import="java.sql.*" %>
@@ -109,9 +109,11 @@
     		
     	<!--text area -->  
     		<div class="span8">
-      			<textarea class="field span12" id="textarea" rows="23" placeholder="Enter a short synopsis"></textarea>
+      			<textarea class="field span12" id="coeditor" rows="23" placeholder="Enter a short synopsis"></textarea>
     		</div>
-    		
+    		<div id="console-container">
+        		<div id="console"></div>
+    		</div>
     	<!--related userlist -->  
     		<div class="span2">
       			<div class="well sidebar-nav">
