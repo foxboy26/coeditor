@@ -2,6 +2,8 @@ package coeditor;
 
 import java.util.ArrayList;
 
+import com.google.gson.Gson;
+
 public class ChangeSet {
 	int oldLength;
 	int newLength;
@@ -10,6 +12,13 @@ public class ChangeSet {
 	public ChangeSet() {
 		oldLength = newLength = 0;
 		changeList = new ArrayList<Change> ();
+	}
+	
+	public ChangeSet(String content) {
+		oldLength = 0;
+		newLength = content.length();
+		changeList = new ArrayList<Change> ();
+		changeList.add(new Change(content));
 	}
 	
 	public ChangeSet(int oldLength, int newLength) {
@@ -241,5 +250,17 @@ public class ChangeSet {
 
 		ChangeSet ba = ChangeSet.composition(b, fba);
 		System.out.println("Bf(B, A): " + ba.toString());
+		
+		Gson gson = new Gson();
+		String json = gson.toJson(ba);
+		System.out.println(json);
+		
+		ChangeSet test = gson.fromJson(json, ChangeSet.class);
+		
+		System.out.println(test);
+		
+		ChangeSet headChange = new ChangeSet("hah");
+		System.out.println(headChange);
+		
 	}
 }

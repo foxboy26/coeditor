@@ -16,10 +16,14 @@ import org.apache.catalina.websocket.StreamInbound;
 import org.apache.catalina.websocket.WebSocketServlet;
 import org.apache.catalina.websocket.WsOutbound;
 
+import com.google.gson.Gson;
+
 public class CoeditorWebSocketServlet extends WebSocketServlet {
 
     private static final long serialVersionUID = 1L;
 
+    private Gson gson = new Gson();
+    
     private final AtomicInteger connectionIds = new AtomicInteger(0);
     private final Map<String, CoeditorMessageInbound> connections =
             new Hashtable<String, CoeditorMessageInbound>();
@@ -29,12 +33,11 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
     @Override
     protected StreamInbound createWebSocketInbound(String subProtocol,
             HttpServletRequest request) {
-        return new CoeditorMessageInbound(connectionIds.incrementAndGet());
+        return new CoeditorMessageInbound();
     }
 
     private final class CoeditorMessageInbound extends MessageInbound {
 
-        private final String clientId;
         private Document document;
         
         private CoeditorMessageInbound() {
@@ -49,9 +52,6 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
         @Override
         protected void onClose(int status) {
             connections.remove(this);
-            String message = String.format("* %s %s",
-                    clientId, "has disconnected.");
-            broadcast(message, this.document.users);
         }
 
         @Override
@@ -62,22 +62,36 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
 
         @Override
         protected void onTextMessage(CharBuffer message) throws IOException {
-            // Never trust the client
-        	String msg = message.toString();
+
+        	Message msg = gson.fromJson(message.toString(), Message.class);
         	
-        	String action = "open";
+        	System.out.println("[new message]: " + message.toString());
+        	
+        	String action = msg.action;
+        	
+        	if (action == null || action.length() == 0)
+        		action = "open";
         	
         	if (action != null && action.equals("open")) {
-        		String clientId = "xxx";
-        		String docId = "aaa";
-        		open(clientId, docId);
-        	}        	
+        		if (msg.contentType == Message.STRING) {
+          		// step 1: open document for client
+        			String clientId = msg.clientId;
+          		String docId = msg.content;
+          		open(clientId, docId);
+          		
+          		// step 2: send back HEADTEXT
+          		String headText = "Hello Xixi!";
+          		ChangeSet testChangeSet = new ChangeSet(headText);
+          		sendMessage(gson.toJson(testChangeSet));
+          		//sendMessage(this.document.headText);
+        		}
+        	}
         }
 
-        private boolean open(String docId) {
+        private boolean open(String clientId, String docId) {
         	this.document = new Document(docId);
         	
-        	this.document.open(this.clientId);
+        	this.document.open(clientId);
         	
       		if (!documents.containsKey(docId))
       			documents.put(docId, this.document);
@@ -90,6 +104,16 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
         private boolean close(String docId) {
         	        	
         	return true;
+        }
+        
+        private void sendMessage(String message) {
+        	CharBuffer buffer = CharBuffer.wrap(message);
+        	try {
+	          this.getWsOutbound().writeTextMessage(buffer);
+          } catch (IOException e) {
+	          // TODO Auto-generated catch block
+	          e.printStackTrace();
+          }
         }
         
         private void broadcast(String message, Set<String> targets) {
