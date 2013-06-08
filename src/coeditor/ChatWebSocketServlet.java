@@ -68,7 +68,7 @@ public class ChatWebSocketServlet extends WebSocketServlet {
             // Never trust the client
             String filteredMessage = String.format("%s: %s",
                     nickname, message.toString());
-            broadcast(filteredMessage);
+            //broadcast(filteredMessage);
         }
 
         private void broadcast(String message) {
