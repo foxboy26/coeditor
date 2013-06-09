@@ -70,6 +70,7 @@
 
             Coeditor.socket.onmessage = function (message) {
             	message = message.data;
+            	Console.log(message);
             	var action = message.action;
             	if(action == "response")
             		Textarea.update(message.content);
