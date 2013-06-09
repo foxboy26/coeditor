@@ -5,3 +5,4 @@ a.out
 .classpath
 .settings/
 .DS_Store
+AwsCredentials.properties
