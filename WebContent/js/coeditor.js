@@ -70,6 +70,7 @@
 
             Coeditor.socket.onmessage = function (message) {
             	message = message.data;
+            	message = JSON.parse(message);
             	Console.log(message);
             	var action = message.action;
             	if(action == "response")
@@ -94,7 +95,7 @@
 
         var Textarea = {};
         Textarea.update = function(message) {
-        	var changeset = JSON.parse(message);
+        	var changeset = message;
         	var oldText = document.getElementById('coeditor').value;
         	//alert(oldText);
         	var changeList = changeset.changeList;
