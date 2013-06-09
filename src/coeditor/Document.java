@@ -5,28 +5,32 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import storage.KeyValueStore;
+
 public class Document {
 	String headText;
 	String docId;
 	int headRevision;
 	ArrayList<RevisionRecord> revisionList;
-	Map<String, Integer> activeUsers;
+	Map<Integer, Client> activeUsers;
 	boolean isOpen;
+	KeyValueStore storage;
 	
-	public Document(String docId) {
+	public Document(String documentId, KeyValueStore storage) {
+		this.storage = storage;
+		this.docId = documentId;
 		this.revisionList = new ArrayList<RevisionRecord> ();
-		this.activeUsers = new Hashtable<String, Integer> ();
-		this.docId = docId;
+		this.activeUsers = new Hashtable<Integer, Client> ();
 		this.headRevision = -1;
 	}
 	
-	public void open(String clientId) {
+	public void open(int connectionId, String clientId) {
+		
+		Client newClient = new Client(clientId);
 		
 		if (!isOpen) {
-			
 			//TODO: connect to S3 to fetch the document.
-		  //TODO: test only, change it later
-			headText = "abcdefg";
+			headText = storage.getDocument(docId);
 			
 			Change initChange = new Change(headText);
 			ChangeSet initChangeSet = new ChangeSet(0, headText.length());
@@ -34,13 +38,15 @@ public class Document {
 			initChangeSet.addChange(initChange);
 			
 			this.addRevisionRecord(clientId, initChangeSet);
+
+			newClient.latestVersion = headRevision;
 			
 			isOpen = true;
 		} else {
 			//TODO
 		}		
 		
-		activeUsers.put(clientId, this.headRevision);
+		this.addUser(connectionId, newClient);
 	}
 	
 	public void save() {
@@ -72,15 +78,15 @@ public class Document {
 		
 	}
 	
-	public void addUser(String clientId, int revisionNumber) {
-		activeUsers.put(clientId, revisionNumber);
+	public void addUser(Integer clientId, Client user) {
+		activeUsers.put(clientId, user);
 	}
 	
-	public void removeUser(String clientId) {
+	public void removeUser(Integer clientId) {
 		activeUsers.remove(clientId);
 	}
 	
-	public Set<String> getActiveUser() {
+	public Set<Integer> getActiveUser() {
 		return this.activeUsers.keySet();
 	}
 }
