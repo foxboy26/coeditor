@@ -2,12 +2,15 @@
 <!DOCTYPE html>
 <html>
 <jsp:include page="common/header.jsp" />
-<script src="js/coeditor.js"></script>
 <body>
 
 <%@ page language="java" import="java.sql.*" %>
 <%@ page language="java" import="java.util.ArrayList" %>
 <%@ page language="java" import="db.Config" %>
+
+<script type="text/javascript">
+	
+</script>
 <%-- -------- Open Connection Code -------- --%>
 <%
   try {
@@ -18,14 +21,74 @@
     Connection conn = DriverManager.getConnection(Config.connectionURL, Config.username, Config.password);
     
     String curFile = request.getParameter("file");
+    //System.out.println(curFile);
     
     String name = (String)session.getAttribute("username");
     
-    Statement statement = conn.createStatement();
-    String sql = "select filelist.name from users, share, filelist where username ='" + name + "' and users.id = share.user and share.file = filelist.id";
-
-    ResultSet rs = statement.executeQuery(sql);
+    String docName = request.getParameter("title");   
     
+    String action = request.getParameter("name");   
+    
+    Statement state = conn.createStatement();
+    
+    PreparedStatement pstmt = null;
+    String sql = "";
+
+    ResultSet rs = null;
+    
+    //getuserid
+    sql = "select id from users where username = '" + name + "'";
+	rs = state.executeQuery(sql);
+	rs.next();
+	int userid = rs.getInt(1);
+	//System.out.println(userid);
+	
+	int docid = -1;
+	
+	if(curFile != null){
+		//get docid
+		sql = "select id from filelist where name = '" + curFile + "'";
+		rs = state.executeQuery(sql);
+		rs.next();
+		docid = rs.getInt(1);
+		session.setAttribute("docid", docid);		
+	}
+	
+	
+    if(action != null && action.equals("create")){
+    	if(docName != null){
+    		conn.setAutoCommit(false);
+    		
+    		//update filelist    		
+    		pstmt = conn.prepareStatement("INSERT INTO filelist (name, path) VALUES (?, ?)");
+    		pstmt.setString(1, docName);
+    		pstmt.setString(2, "C://" + docName + '"');    		
+    		pstmt.executeUpdate();   
+    		
+    		
+    		//get docid
+    		sql = "select id from filelist where name = '" + docName + "'";
+			rs = state.executeQuery(sql);
+			rs.next();
+			docid = rs.getInt(0);
+			session.setAttribute("docid", docid);
+    				
+    		//update share
+    		pstmt = conn.prepareStatement("INSERT INTO share (user, file, owner) VALUES (?, ?, ?)");
+    		pstmt.setString(1, Integer.toString(userid));
+    		pstmt.setString(2, Integer.toString(docid)); 
+    		pstmt.setString(3, Integer.toString(userid));
+    		pstmt.executeUpdate();
+
+    	      // Commit transaction
+    	    conn.commit();
+    	    conn.setAutoCommit(true);
+    		
+    	}
+    }
+    
+    sql = "select filelist.name, filelist.id from users, share, filelist where username ='" + name + "' and users.id = share.user and share.file = filelist.id";
+    rs = state.executeQuery(sql);
     /* if(name != null){
     	if(button.equals("Login")){
     		if(rs.next()){
@@ -60,33 +123,38 @@
 		  
     }  */
 %>
+	<div >
+		<input type="hidden" value=<%=userid%> id="userid">
+		<input type="hidden" value=<%=docid%> id="docid">
+	</div>
 	<div class="container-fluid">
   		<div class="row-fluid">
-  		
-  		<!--doc title -->
-  		<div class="span5 offset2">
-  			<div class="row-fluid">
-	  			<div class="span1" id="username">
-		          <label class="control-label">Title</label>
-		         </div>
-		          <div class="span11">
-		            <input type="text" value="" name="title" autofocus="autofocus">
-		          </div>
-	        </div>
-  		</div>	
-    		
-    		
-    	<!--buttons -->
-    		<div class="span3">
-    				<div class="span3 offset6">
-      					<input type="button" class="btn btn-primary" name="button" value="create">
-      				</div>
-      				<div class="span3">
-          				<input type="button" class="btn" name="button" value="share">
-          			</div>
-    		</div>
-  		</div>
-  		
+  		  <form action="coeditor.jsp" method="get">
+  		  
+	  		<!--doc title -->
+	  		<div class="span5 offset2">
+	  			<div class="row-fluid">
+		  			<div class="span1" id="username">
+			          <label class="control-label">Title</label>
+			         </div>
+			          <div class="span11">
+			            <input type="text" value="" name="title" autofocus="autofocus">
+			          </div>
+		        </div>
+	  		</div>	
+	    		
+	    		
+	    	<!--buttons -->
+	    		<div class="span3">
+	    				<div class="span3 offset6">
+	      					<input type="submit" class="btn btn-primary" name="create" id = "create" value = "create">
+	      				</div>
+	      				<div class="span3">
+	          				<input type="submit" class="btn" name="share" id ="share" value = "share">
+	          			</div>
+	    		</div>
+	    	</form>
+	  	</div>
   		<div class="row-fluid">
   		<!--editable filelist -->    
     		<div class="span2">
@@ -96,9 +164,10 @@
       			<%
       				while(rs.next()){
       					String file = rs.getString("name");
-      					System.out.println(file);
+      					int id = rs.getInt("id");
+      					//System.out.println(file);
       			%>
-				  		<li><a href="coeditor.jsp?file=<%= file %>"><%=file%></a></li>
+				  		<li><a href="#" name = "file" onclick = "getUserList(this)"><%=file%></a></li>
 				<%
       				}
 				%>
@@ -110,28 +179,17 @@
     	<!--text area -->  
     		<div class="span8">
       			<textarea class="field span12" id="coeditor" rows="23" placeholder="Enter a short synopsis"></textarea>
+      			<div id="console-container">
+	        		<div id="console">
+	        		</div>
+    			</div>
     		</div>
-    		<div id="console-container">
-        		<div id="console"></div>
-    		</div>
+    		
     	<!--related userlist -->  
     		<div class="span2">
       			<div class="well sidebar-nav">
-          			<ul class="nav nav-list">
+          			<ul class="nav nav-list" id = "userlist">
             			<li class="nav-header">Userlist</li>
-      			<%
-      				if(curFile != null){
-      					sql = "select users.username from filelist, share, users where filelist.name = '" + curFile + "' and share.file = filelist.id and share.user = users.id";
-      					rs = statement.executeQuery(sql);
-      					while(rs.next()){
-      						String user = rs.getString("username");
-      						System.out.println(user);
-      			%>
-				  		<li><%=user%></li>
-				<%
-      					}
-      				}
-				%>
 			<!-- <li class="divider"></li> -->	  
 					</ul>
 				</div>
@@ -145,7 +203,9 @@
     rs.close();
 
     // Close the Statement
-    statement.close();
+    state.close();
+    
+    pstmt.close();
 
     // Close the Connection
     conn.close();
@@ -158,5 +218,6 @@
 
   <script src="js/jquery-1.9.1.js"></script>
   <script src="js/bootstrap.min.js"></script>
+  <script src="js/coeditor.js"></script>
 </body>
 </html>

@@ -70,9 +70,12 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
         @Override
         protected void onTextMessage(CharBuffer message) throws IOException {
 
+        	
+        	
         	Message msg = gson.fromJson(message.toString(), Message.class);
         	
-        	System.out.println("[new message]: " + message.toString());
+        	System.out.println("[Action]: " + msg.action);
+        	System.out.println("[Type]: " + msg.contentType);
         	
         	String action = msg.action;
         	if (action != null && action.equals("open")) {
