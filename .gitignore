@@ -6,3 +6,4 @@ a.out
 .settings/
 .DS_Store
 AwsCredentials.properties
+build/
