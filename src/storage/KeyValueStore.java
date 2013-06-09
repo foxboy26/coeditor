@@ -162,6 +162,17 @@ public class KeyValueStore {
 		return file;
 	}
 	
+	private static File createTestFile() throws IOException {
+		File file = File.createTempFile("aws-java-sdk-", ".txt");
+		file.deleteOnExit();
+
+		Writer writer = new OutputStreamWriter(new FileOutputStream(file));
+		writer.write("hello xixi!");
+		writer.close();
+		return file;
+	}
+	
+	
 	public static void main(String[] args) {
 		KeyValueStore kv = new KeyValueStore();
 
@@ -172,13 +183,14 @@ public class KeyValueStore {
 			System.out.println(" - " + bucket.getName());
 		}
 		try {
-			kv.put("mytest", createSampleFile());
+			kv.put("223", createTestFile());
 
-			System.out.println(kv.getDocument("mytest"));
+			System.out.println(kv.getDocument("223"));
 			
 			System.out.println();
-			kv.deleteKey("mytest");
-			kv.deleteBucket();
+			
+			//kv.deleteKey("mytest");
+			//kv.deleteBucket();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

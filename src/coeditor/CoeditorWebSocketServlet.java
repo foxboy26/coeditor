@@ -88,6 +88,7 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           		// step 2: send back HEADTEXT
           		//String headText = "Hello Xixi!";
 	          		String headText = documents.get(docId).headText;
+	          		System.out.println(headText);
 	          		ChangeSet testChangeSet = new ChangeSet(headText);
 	          		Message response = new Message("server", "response", Message.CHANGESET, gson.toJson(testChangeSet));
 	          		sendMessage(gson.toJson(response));
