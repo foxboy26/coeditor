@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Scanner;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -119,6 +120,12 @@ public class KeyValueStore {
           return new InputStreamReader(object.getObjectContent());
 	}
 	
+	public String getDocument(String key) {
+		InputStreamReader inputReader = this.get(key);
+		Scanner s = new Scanner(inputReader).useDelimiter("\\A");
+    return s.hasNext() ? s.next() : "";
+	}
+	
 	private void debugPrint(String msg){
 		if(true == debugEnabled)
 			System.err.println(msg);
@@ -166,14 +173,9 @@ public class KeyValueStore {
 		}
 		try {
 			kv.put("mytest", createSampleFile());
-			InputStreamReader inputReader = kv.get("mytest");
-			BufferedReader reader = new BufferedReader(inputReader);
-			while (true) {
-				String line = reader.readLine();
-				if (line == null)
-					break;
-				System.out.println("    " + line);
-			}
+
+			System.out.println(kv.getDocument("mytest"));
+			
 			System.out.println();
 			kv.deleteKey("mytest");
 			kv.deleteBucket();
