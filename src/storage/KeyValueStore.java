@@ -22,9 +22,11 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 
+import db.Config;
+
 public class KeyValueStore {
 	private AmazonS3 s3;
-	private static final String bucketName = "cse223bproj";
+	private final String bucketName;
 	private boolean debugEnabled = true;
 
 	public KeyValueStore() {
@@ -32,6 +34,20 @@ public class KeyValueStore {
 				new ClasspathPropertiesFileCredentialsProvider());
 		Region usWest2 = Region.getRegion(Regions.US_WEST_2);
 		s3.setRegion(usWest2);
+
+    this.bucketName = Config.bucketName;
+	}
+
+	public KeyValueStore(String bucketName) {
+		s3 = new AmazonS3Client(
+				new ClasspathPropertiesFileCredentialsProvider());
+		Region usWest2 = Region.getRegion(Regions.US_WEST_2);
+		s3.setRegion(usWest2);
+
+    this.bucketName = bucketName;
+	}
+
+  public void createBucket() {
 		debugPrint("Creating bucket " + bucketName + "\n");
 		try {
 			s3.createBucket(bucketName);
@@ -40,7 +56,7 @@ public class KeyValueStore {
 		} catch (AmazonClientException ace) {
 			printACEerrMsg(ace);
 		}
-	}
+  }
 	
 	public void deleteBucket(){
 		debugPrint("Deleting an object:" + bucketName + "\n");
@@ -141,6 +157,8 @@ public class KeyValueStore {
 	
 	public static void main(String[] args) {
 		KeyValueStore kv = new KeyValueStore();
+
+    kv.createBucket();
 		// List the buckets in your account
 		System.out.println("Listing buckets");
 		for (Bucket bucket : kv.s3.listBuckets()) {
