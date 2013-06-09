@@ -1,68 +1,139 @@
-	var coeditor = {};
+	var A;
+	var X;
+	var Y;
 
-	coeditor.socket = null;
 
-	coeditor.connect = (function(host) {
+
+	var Coeditor = {};
+
+	Coeditor.socket = null;
+
+	Coeditor.connect = (function(host) {
             if ('WebSocket' in window) {
-                coeditor.socket = new WebSocket(host);
+                Coeditor.socket = new WebSocket(host);
             } else if ('MozWebSocket' in window) {
-                coeditor.socket = new MozWebSocket(host);
+                Coeditor.socket = new MozWebSocket(host);
             } else {
                 Console.log('Error: WebSocket is not supported by this browser.');
                 return;
             }
 
-            coeditor.socket.onopen = function () {
+            Coeditor.socket.onopen = function () {
                 Console.log('Info: WebSocket connection opened.');
-                document.getElementById('coeditor').onkeydown = function(event) {
-                 //   if (event.keyCode == 13) {
-                        coeditor.sendMessage();
-                 //   }
+                
+                
+                //open doc
+                var doc = document.getElementsByName('file');
+                var length = doc.length;
+               
+                if(length != 0){
+                	for(var i = 0; i < length; ++i){
+                		//alert(doc[i]);
+                		doc[i].onclick = function(event) {
+             
+                			//alert(this.text);               			
+		                	var message = {
+		        			clientId: $('#userid').value,
+		        			action: "open",
+		        			contentType: 0,
+		        			content: this.text      			
+		                	};
+				        	var jmessage = JSON.stringify(message);
+				        	alert(jmessage);
+				            Coeditor.socket.send(jmessage); 
+				            
+				            getUserList(this);
+		                };
+                	}
                 };
+                
+                document.getElementById('coeditor').onkeydown = function(event) {
+                	var message = {
+	        			clientId: document.getElementById('userid').value,
+	        			action: "open",
+	        			contentType: 0,
+	        			content: "0"      			
+	                	};
+		        	var jmessage = JSON.stringify(message);
+		        	alert(jmessage);
+		            Coeditor.socket.send(jmessage);  
+                };
+                
+                
+                
             };
 
-            coeditor.socket.onclose = function () {
+            Coeditor.socket.onclose = function () {
                 document.getElementById('coeditor').onkeydown = null;
                 Console.log('Info: WebSocket closed.');
             };
 
-            coeditor.socket.onmessage = function (message) {
-                Console.log(message.data);
+            Coeditor.socket.onmessage = function (message) {
+            	message = message.data;
+            	var action = message.action;
+            	if(action == "response")
+            		Textarea.update(message.content);
+            	else{
+            		
+            	}
+            	
                 
             };
         });
 
-        coeditor.initialize = function() {
+        Coeditor.initialize = function() {
             if (window.location.protocol == 'http:') {
-                coeditor.connect('ws://' + window.location.host + '/coeditor/coeditor');
+                Coeditor.connect('ws://' + window.location.host + '/coeditor/coeditor');
             } else {
-                coeditor.connect('wss://' + window.location.host + '/coeditor/coeditor');
+                Coeditor.connect('wss://' + window.location.host + '/coeditor/coeditor');
             }
         };
+        
+        
 
-        coeditor.sendMessage = (function() {
-        	var message = {
-        			clientId: "1",
-        			action: "open",
-        			contentType: 0,
-        			content: "1"      			
-        	};
-        	
-        	if (message != '') {
-                coeditor.socket.send(message);
-            }
-        	
-        	
-           /* var message = document.getElementById('coeditor').value;
-            if (message != '') {
-                coeditor.socket.send(message);
-                document.getElementById('coeditor').value = '';
-            }*/
-        });
-
+        var Textarea = {};
+        Textarea.update = function(message) {
+        	var changeset = JSON.parse(message);
+        	var oldText = document.getElementById('coeditor').value;
+        	//alert(oldText);
+        	var changeList = changeset.changeList;
+        	var length = changeList.length;
+        	var newText = "";
+        	for(var i = 0; i < length; ++i){
+        		var change = changeList[i];
+        		alert("type:" + change.type);
+        		//new
+        		if(change.type == 0){
+        			newText += change.content;
+        		} else {
+        			alert("content length:" + change.content.length);
+        			if(change.content.length == 1){
+        				newText += oldText.charAt(parseInt(change.content));
+        			}
+        			else{
+        				var begin = parseInt(change.content[0]);
+        				var end = parseInt(change.content[2]) + 1;
+        				newText += oldText.substring(begin, end);
+        			}
+        		}
+        	}
+        	alert("newtext:" + newText);
+        	document.getElementById('coeditor').value = newText;
+        };
+        
+        
+        
+        
+        
+        
+        
+        
+        
         var Console = {};
-
         Console.log = (function(message) {
+        	
+        	alert(message);
+        	
             var console = document.getElementById('console');
             var p = document.createElement('p');
             p.style.wordWrap = 'break-word';
@@ -74,4 +145,21 @@
             console.scrollTop = console.scrollHeight;
         });
 
-        coeditor.initialize();
+        Coeditor.initialize();
+        
+        
+        function getUserList(link){
+    		var docName = link.text;
+    		alert(docName);
+    		$.getJSON('userlist.jsp?docName=' + docName, function(data) {
+    			$('#userlist').empty();
+    			var head = "<li class='nav-header'>Userlist</li>";
+    			$('#userlist').append(head);
+    			
+    			for (var i = 0; i < data.length; i++) {
+    				var newli = document.createElement("li");  // Create with DOM
+    				newli.innerHTML= data[i].username;
+    				$('#userlist').append(newli);
+    			}
+    		});
+    	}

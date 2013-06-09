@@ -63,9 +63,12 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
         @Override
         protected void onTextMessage(CharBuffer message) throws IOException {
 
+        	
+        	
         	Message msg = gson.fromJson(message.toString(), Message.class);
         	
-        	System.out.println("[new message]: " + message.toString());
+        	System.out.println("[Action]: " + msg.action);
+        	System.out.println("[Type]: " + msg.contentType);
         	
         	String action = msg.action;
         	
@@ -77,6 +80,9 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           		// step 1: open document for client
         			String clientId = msg.clientId;
           		String docId = msg.content;
+          		
+          		System.out.println("[cid]: " + clientId);
+            	System.out.println("[did]: " + docId);
           		open(clientId, docId);
           		
           		// step 2: send back HEADTEXT
