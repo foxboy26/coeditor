@@ -6,10 +6,8 @@
 <%-- -------- Open Connection Code -------- --%>
 <%
 
-  System.out.println("here!");
-  String docName = request.getParameter("docName");
+    String docName = request.getParameter("docName");
 
-  System.out.println("doc: " + docName);
   
 	Connection conn = null;
 	PreparedStatement pstmt = null;
@@ -32,7 +30,6 @@
 			userlist.add(rs.getString("username"));
 		}
 		
-		System.out.println("user num: " +  userlist.size());
       	out.println("[");
       	boolean first = true;
      	for(String name: userlist) {

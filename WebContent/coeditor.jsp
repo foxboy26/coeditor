@@ -2,6 +2,11 @@
 <!DOCTYPE html>
 <html>
 <jsp:include page="common/header.jsp" />
+<head>
+	  <script src="js/jquery-1.9.1.js"></script>
+	  <script src="js/bootstrap.min.js"></script>
+	  <script src="js/coeditor.js"></script>
+</head>
 <body>
 
 <%@ page language="java" import="java.sql.*" %>
@@ -89,39 +94,6 @@
     
     sql = "select filelist.name, filelist.id from users, share, filelist where username ='" + name + "' and users.id = share.user and share.file = filelist.id";
     rs = state.executeQuery(sql);
-    /* if(name != null){
-    	if(button.equals("Login")){
-    		if(rs.next()){
-          		session.setAttribute("username", name);
-            	response.sendRedirect("coeditor.jsp");
-    		}
-        	else 
-          		response.sendRedirect("login.jsp"); 
-    	}
-		if(button.equals("Sign-up")) {
-			 session.setAttribute("username", name);
-			 // Begin transaction
-		     conn.setAutoCommit(false);
-
-		      // Create the prepared statement and use it to
-		      // INSERT user values INTO the user table.
-		     PreparedStatement pstmt = conn
-		      .prepareStatement("INSERT INTO users (username) VALUES (?)");
-		      
-		     System.out.println(name);
-
-		      pstmt.setString(1, name);
-		      int rowCount = pstmt.executeUpdate();
-
-		      // Commit transaction
-		      conn.commit();
-		      conn.setAutoCommit(true);
-
-		      // Close the Statement
-		      pstmt.close();
-		}
-		  
-    }  */
 %>
 	<div >
 		<input type="hidden" value=<%=userid%> id="userid">
@@ -215,9 +187,5 @@
       out.println(e.getMessage());
   }
 %>
-
-  <script src="js/jquery-1.9.1.js"></script>
-  <script src="js/bootstrap.min.js"></script>
-  <script src="js/coeditor.js"></script>
 </body>
 </html>

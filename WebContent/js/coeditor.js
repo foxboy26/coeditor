@@ -3,7 +3,6 @@
 	var Y;
 
 
-
 	var Coeditor = {};
 
 	Coeditor.socket = null;
@@ -23,41 +22,30 @@
                 
                 
                 //open doc
-                var doc = document.getElementsByName('file');
+                var doc = $("li[name = file]");
                 var length = doc.length;
                
                 if(length != 0){
                 	for(var i = 0; i < length; ++i){
-                		//alert(doc[i]);
-                		doc[i].onclick = function(event) {
-             
-                			//alert(this.text);               			
+                		doc[i].onclick = function(event) { 
 		                	var message = {
-		        			clientId: $('#userid').value,
-		        			action: "open",
-		        			contentType: 0,
-		        			content: this.text      			
+			        			clientId: $('#userid').val(),
+			        			action: "open",
+			        			contentType: 0,
+			        			content: this.text      			
 		                	};
 				        	var jmessage = JSON.stringify(message);
-				        	alert(jmessage);
-				            Coeditor.socket.send(jmessage); 
-				            
+				            Coeditor.socket.send(jmessage); 				            				          				            
 				            getUserList(this);
 		                };
                 	}
                 };
                 
-                document.getElementById('coeditor').onkeydown = function(event) {
-                	var message = {
-	        			clientId: document.getElementById('userid').value,
-	        			action: "open",
-	        			contentType: 0,
-	        			content: "0"      			
-	                	};
-		        	var jmessage = JSON.stringify(message);
-		        	alert(jmessage);
-		            Coeditor.socket.send(jmessage);  
-                };
+                $('#coeditor').keypress(function(event) {
+                	
+                	var message = computeChangeSet(event);
+		            //Coeditor.socket.send(message);  
+                });
                 
                 
                 
@@ -97,11 +85,17 @@
         var Textarea = {};
         Textarea.update = function(message) {
         	var changeset = JSON.parse(message);
-        	var oldText = document.getElementById('coeditor').value;
+        	var oldText = $('#coeditor').value;
         	//alert(oldText);
         	var changeList = changeset.changeList;
         	var length = changeList.length;
         	var newText = "";
+        	
+        	if(changeset.oldLength == 0){
+        		A = changeset;
+        	}
+        	
+        	
         	for(var i = 0; i < length; ++i){
         		var change = changeList[i];
         		alert("type:" + change.type);
@@ -121,28 +115,19 @@
         		}
         	}
         	alert("newtext:" + newText);
-        	document.getElementById('coeditor').value = newText;
+        	oldLength = newtext.length();
+        	$('#coeditor')[0].value = newText;
         };
-        
-        
-        
-        
-        
-        
-        
-        
         
         var Console = {};
         Console.log = (function(message) {
-        	
-        	alert(message);
-        	
-            var console = document.getElementById('console');
+            	
+            var console = $('#console');
             var p = document.createElement('p');
             p.style.wordWrap = 'break-word';
             p.innerHTML = message;
-            console.appendChild(p);
-            while (console.childNodes.length > 25) {
+            console.append(p);
+            while (console.children().length > 25) {
                 console.removeChild(console.firstChild);
             }
             console.scrollTop = console.scrollHeight;
@@ -153,7 +138,6 @@
         
         function getUserList(link){
     		var docName = link.text;
-    		alert(docName);
     		$.getJSON('userlist.jsp?docName=' + docName, function(data) {
     			$('#userlist').empty();
     			var head = "<li class='nav-header'>Userlist</li>";
@@ -166,3 +150,118 @@
     			}
     		});
     	}
+        
+        function computeChangeSet(event){
+        	//TODO: keycode
+        	var keycode = (event.keyCode ? event.keyCode : event.which);
+        	var value = String.fromCharCode(keycode);
+        	var oldLength = $('#coeditor').val().length;
+        	alert("oldL:" + oldLength);
+        	var cursorPosition = $('#coeditor').getSelectionStart();	
+        		
+        		//$('#coeditor').getSelectionStart();
+        	alert("cursorPosition:" + cursorPosition);
+        	var changeList = new Array();
+        	if(cursorPosition == 0){
+        		var change = {
+            			"type" : 0,
+                    	"length" : 1,
+                    	"content": value
+            	};
+        		changeList[0] = change; 
+        		change = getLastChange(oldLength, cursorPosition, false);
+        		if(change != null)
+        			changeList[1] = change;
+        	} else if(cursorPosition == 1) {       		
+        		var change = {
+            			"type" : 1,
+                    	"length" : 1,
+                    	"content": 0
+            	};
+        		changeList[0] = change;
+        		change = {
+            			"type" : 0,
+                    	"length" : 1,
+                    	"content": value
+            	};
+        		changeList[1] = change;
+        		change = getLastChange(oldLength, cursorPosition, false);
+        		if(change != null)
+        			changeList[2] = change;
+        	} else{
+        		var change = {
+        				"type" : 1,
+                    	"length" : cursorPosition,
+                    	"content": "0-" + (cursorPosition - 1)
+            	};
+        		changeList[0] = change;
+        		change = {
+            			"type" : 0,
+                    	"length" : 1,
+                    	"content": value
+            	};
+        		changeList[1] = change;
+        		change = getLastChange(oldLength, cursorPosition, false);
+        		if(change != null)
+        			changeList[2] = change;
+        	}
+        	
+        	var changeset = {
+        			"oldLength" : oldLength,
+        			"newLength": oldLength + 1,
+        			"changeList": changeList
+        	};
+        	
+        	
+        	var message = {
+        			"clientid": $('#userid').value,
+        			"action" : "newChange",
+        			"changeList": JSON.stringify(changeset)
+        	};
+        	Y = changeList;
+        	var jmessage = JSON.stringify(message);
+        	alert("new message:" + jmessage);
+        	return jmessage;
+        }
+        
+        
+        function getLastChange(oldLength, curPos, isDelete){
+        	var change = null;
+        	if(!isDelete){
+        		if(curPos < oldLength - 1){
+        			change = {
+                			"type" : 1,
+                        	"length" : oldLength - curPos,
+                        	"content": curPos + "-" + (oldLength - 1)
+                	};
+        		} else if(curPos == oldLength - 1){
+        			change = {
+                			"type" : 1,
+                        	"length" : 1,
+                        	"content": oldLength - 1
+                	};
+        		}       		
+        	}
+        	return change;
+        }
+        
+        
+        
+        $.fn.getSelectionStart = function(){
+        	if(this.lengh == 0) return -1;
+        	input = this[0];
+
+        	var pos = input.value.length;
+
+        	if (input.createTextRange) {
+        		var r = document.selection.createRange().duplicate();
+        		r.moveEnd('character', input.value.length);
+        	if (r.text == '') 
+        		pos = input.value.length;
+        		pos = input.value.lastIndexOf(r.text);
+        	} else if (typeof(input.selectionStart)!="undefined"){
+        		pos = input.selectionStart;
+
+        		return pos;
+        	}
+        };
