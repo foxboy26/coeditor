@@ -50,13 +50,19 @@ public class Document {
 	}
 	
 	public void save() {
+		
 		updateHeadtext();
+		
+		storage.put(docId, headText);
 	}
 	
-	public void close() {
+	public void close(int connectionId) {
 		save();
 		
-		isOpen = false;
+		this.activeUsers.remove(connectionId);
+		
+		if (this.activeUsers.size() == 0)
+			isOpen = false;
 	}
 	
 	public ChangeSet applyChangeSet(ChangeSet cs, int revisionNumber) {
