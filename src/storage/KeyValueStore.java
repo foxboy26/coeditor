@@ -137,6 +137,10 @@ public class KeyValueStore {
 		
 		put(key, file);
 	}
+
+  public void createBlankDocument(String key) throws IOException {
+    putDocument(key, "");
+  }
 	
 	private void debugPrint(String msg){
 		if(true == debugEnabled)
