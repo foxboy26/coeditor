@@ -31,6 +31,7 @@
     	if(button.equals("Login")){
     		if(rs.next()){
           		session.setAttribute("username", name);
+          		session.setAttribute("userid", rs.getString("id"));
             	response.sendRedirect("coeditor.jsp");
     		}
         	else 
