@@ -66,8 +66,7 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
 
       @Override
       protected void onBinaryMessage(ByteBuffer message) throws IOException {
-          throw new UnsupportedOperationException(
-                  "Binary message not supported.");
+          throw new UnsupportedOperationException("Binary message not supported.");
       }
 
       @Override
@@ -107,14 +106,20 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           sendErrorMessage(action + " is not supported");
         
         } else if (action != null && action.equals("newChange")) {
-          
-          broadcast("haha");
-          
-          sendErrorMessage(action + " is not supported");
+         
+          ChangeSet newChange = gson.fromJson(msg.content, ChangeSet.class);
 
-        } else if (action != null && action.equals("sync")) {
-
-          sendErrorMessage(action + " is not supported");
+          Client client = document.activeUsers.get(connectionId);
+          
+          ChangeSet newChangePrime = this.document.applyChangeSet(newChange, client.latestVersion);
+          
+          Message syncMsg = new Message("server", "sync", gson.toJson(newChangePrime));
+          broadcast(gson.toJson(syncMsg));
+          
+          Message ackMsg = new Message("server", "ACK", "ACK");
+          sendMessage(gson.toJson(ackMsg));
+          
+          document.addRevisionRecord(clientId, newChangePrime);
 
         } else {
 
@@ -166,7 +171,8 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
       private void broadcast(String message) {
         Set<Integer> targets = this.document.getActiveUser();
         for (int t : targets) {
-          connections.get(t).sendMessage(message);
+        	if (t != connectionId)
+        		connections.get(t).sendMessage(message);
         }
       }
   }
