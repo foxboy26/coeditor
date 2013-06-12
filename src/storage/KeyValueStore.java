@@ -126,6 +126,22 @@ public class KeyValueStore {
     return s.hasNext() ? s.next() : "";
 	}
 	
+	public void putDocument(String key, String content) throws IOException {
+		
+		File file = File.createTempFile("aws-java-sdk-", ".txt");
+		file.deleteOnExit();
+
+		Writer writer = new OutputStreamWriter(new FileOutputStream(file));
+		writer.write(content);
+		writer.close();
+		
+		put(key, file);
+	}
+
+  public void createBlankDocument(String key) throws IOException {
+    putDocument(key, "");
+  }
+	
 	private void debugPrint(String msg){
 		if(true == debugEnabled)
 			System.err.println(msg);

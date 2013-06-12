@@ -1,5 +1,6 @@
 package coeditor;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Map;
@@ -50,13 +51,30 @@ public class Document {
 	}
 	
 	public void save() {
+		
 		updateHeadtext();
+		
+		storage.put(docId, headText);
 	}
 	
-	public void close() {
+	public void close(int connectionId) {
 		save();
 		
-		isOpen = false;
+		this.activeUsers.remove(connectionId);
+		
+		if (this.activeUsers.size() == 0)
+			isOpen = false;
+	}
+	
+	public void create(int conenctionId, String clientId) {
+		try {
+	    storage.createBlankDocument(docId);
+    } catch (IOException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+    }
+		
+		open(conenctionId, clientId);
 	}
 	
 	public ChangeSet applyChangeSet(ChangeSet cs, int revisionNumber) {

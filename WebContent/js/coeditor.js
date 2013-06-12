@@ -148,20 +148,73 @@
         Coeditor.initialize();
         
         
-        function getUserList(link){
-    		var docName = link.text;
-    		$.getJSON('userlist.jsp?docName=' + docName, function(data) {
-    			$('#userlist').empty();
-    			var head = "<li class='nav-header'>Userlist</li>";
-    			$('#userlist').append(head);
-    			
-    			for (var i = 0; i < data.length; i++) {
-    				var newli = document.createElement("li");  // Create with DOM
-    				newli.innerHTML= data[i].username;
-    				$('#userlist').append(newli);
-    			}
-    		});
-    	}
+
+        function openDocument(docId) {
+
+          var message = {
+            clientId: $('#userid').val(),
+            action: "open",
+            content: docId      			
+          };
+
+          var jmessage = JSON.stringify(message);
+
+          Console.log('Info: [open request]' + jmessage);
+
+          Coeditor.socket.send(jmessage); 				            				          				            
+
+          getUserList(docId);
+        }
+
+        function createDocument() {
+          var docName = $('input[name=title]').val()
+          var userId = $('input[name=userid]').val()
+
+          alert(docName + userId);
+          $.getJSON(
+            'createDocument.jsp?docName=' + docName + '&userId=' + userId,
+            function(data) {
+              if (data.trim() == "success") {
+
+                var message = {
+                  clientId: $('#userid').val(),
+                  action: "create",
+                  content: docName      			
+                };
+
+                var jmessage = JSON.stringify(message);
+
+                Console.log('Info: [create request]' + jmessage);
+
+                Coeditor.socket.send(jmessage); 				            				          				            
+
+                getUserList(docName);
+
+                updateFileList(docName);
+              }
+            }
+          );
+        }
+
+        function updateFileList(docId) {
+          var newli = document.createElement("li");  // Create with DOM
+          newli.innerHTML= '<a href="#" name="file" onclick="openDocument("' + docId + '">' + docId  +'</a>'
+          $('#filelist').append(newli);
+        }
+        
+        function getUserList(docName){
+        	  $.getJSON('userlist.jsp?docName=' + docName, function(data) {
+        	    $('#userlist').empty();
+        	    var head = "<li class='nav-header'>Userlist</li>";
+        	    $('#userlist').append(head);
+        	    
+        	    for (var i = 0; i < data.length; i++) {
+        	      var newli = document.createElement("li");  // Create with DOM
+        	      newli.innerHTML= data[i].username;
+        	      $('#userlist').append(newli);
+        	    }
+        	  });
+        	}
         
         function computeChangeSet(event){
         	//TODO: keycode
@@ -455,4 +508,20 @@
 
         		return pos;
         	}
-        };
+        }
+
+
+  
+ 
+
+
+
+
+
+
+
+
+
+
+
+
