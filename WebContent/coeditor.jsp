@@ -32,18 +32,17 @@
     
     String curFile = request.getParameter("file");
     
-    String username = (String)session.getAttribute("username");
+    String username = (String) session.getAttribute("username");
     
-    String docName = request.getParameter("title");   
+    String userid = (String) session.getAttribute("userid");
+    
+    if (username == null || userid == null) {
+      response.sendRedirect("login.jsp");
+    }
     
     String action = request.getParameter("name");   
     
-    //getuserid
-    pstmt = conn.prepareStatement("select id from users where username = ?");
-    pstmt.setString(1, username);
-    rs = pstmt.executeQuery();
-	  rs.next();
-	  int userid = rs.getInt(1);
+    
 	  //System.out.println(userid);
 	
 	int docid = -1;
@@ -57,38 +56,7 @@
 		docid = rs.getInt(1);
 		session.setAttribute("docid", docid);		
 	}
-	
-	
-    if(action != null && action.equals("create")) {
-    	if(docName != null){
-    		conn.setAutoCommit(false);
-    		
-    		//update filelist    		
-    		pstmt = conn.prepareStatement("INSERT INTO filelist (name, path) VALUES (?, ?)");
-    		pstmt.setString(1, docName);
-    		pstmt.setString(2, "C://" + docName + '"');    		
-    		pstmt.executeUpdate();   
-    		
-    		//get docid
-    		pstmt = conn.prepareStatement("select id from filelist where name = ?");
-			  pstmt.setString(1, docName);
-    		rs = pstmt.executeQuery();
-			  rs.next();
-			  docid = rs.getInt("id");
-			  session.setAttribute("docid", docid);
-    				
-    		//update share
-    		pstmt = conn.prepareStatement("INSERT INTO share (user, file, owner) VALUES (?, ?, ?)");
-    		pstmt.setString(1, Integer.toString(userid));
-    		pstmt.setString(2, Integer.toString(docid)); 
-    		pstmt.setString(3, Integer.toString(userid));
-    		pstmt.executeUpdate();
-    		
-    		// Commit transaction
-    	  conn.commit();
-    	  conn.setAutoCommit(true);
-    	}
-    }
+
     
     pstmt = conn.prepareStatement(
       "select filelist.name, filelist.id from users, share, filelist " + 
@@ -97,8 +65,8 @@
     rs = pstmt.executeQuery();
 %>
 	<div>
-		<input type="hidden" value=<%=userid%> id="userid"> <input
-			type="hidden" value=<%=docid%> id="docid">
+    <input type="hidden" name="userid" value=<%=userid%> id="userid" />
+    <input type="hidden" value=<%=docid%> id="docid" />
 	</div>
 	<div class="container-fluid">
 		<div class="row-fluid">
@@ -111,22 +79,18 @@
 							<label class="control-label">Title</label>
 						</div>
 						<div class="span11">
-							<input type="text" value="" name="title" autofocus="autofocus"
-								placeholder="New document">
+							<input type="text" value="" name="title" autofocus="autofocus" placeholder="New document">
 						</div>
 					</div>
 				</div>
 
-
 				<!--buttons -->
 				<div class="span3">
 					<div class="span3 offset6">
-						<input type="submit" class="btn btn-primary" name="create"
-							id="create" value="create">
+						<input type="button" class="btn btn-primary" name="create" value="create" onclick="createDocument()">
 					</div>
 					<div class="span3">
-						<input type="submit" class="btn" name="share" id="share"
-							value="share">
+						<input type="button" class="btn" name="share" value="share" onsubmit="">
 					</div>
 				</div>
 			</form>
@@ -135,7 +99,7 @@
 			<!--editable filelist -->
 			<div class="span2">
 				<div class="well sidebar-nav">
-					<ul class="nav nav-list">
+					<ul class="nav nav-list" id="filelist">
 						<li class="nav-header">Filelist</li>
 						<%
       				while(rs.next()){
@@ -143,7 +107,7 @@
       					int id = rs.getInt("id");
       					//System.out.println(file);
       			%>
-						<li><a href="#" name="file" onclick="getUserList(this)"><%=file%></a></li>
+            <li><a href="#" name="file" onclick="openDocument(<%= file %>)"><%= file %></a></li>
 						<%
       				}
 				%>

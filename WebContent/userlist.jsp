@@ -6,9 +6,8 @@
 <%-- -------- Open Connection Code -------- --%>
 <%
 
-    String docName = request.getParameter("docName");
+  String docName = request.getParameter("docName");
 
-  
 	Connection conn = null;
 	PreparedStatement pstmt = null;
 	ResultSet rs = null;
@@ -20,7 +19,7 @@
     // Load JDBC Driver class file
 	    Class.forName(Config.jdbcDriver);
 	    
-	    conn = DriverManager.getConnection(Config.connectionURL, Config.username, Config.password);
+	  conn = DriverManager.getConnection(Config.connectionURL, Config.username, Config.password);
 		pstmt = conn.prepareStatement("select users.username from filelist, share, users where filelist.name = ? and share.file = filelist.id and share.user = users.id");
 		pstmt.setString(1, docName);
 		rs = pstmt.executeQuery();

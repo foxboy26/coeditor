@@ -75,13 +75,33 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
 
         String clientId = msg.clientId;
         String action = msg.action;
-        if (action != null && action.equals("open")) {
+        
+        if (action != null && action.equals("create")) {
+          // step 1: open document for client
+          String docId = msg.content;
+          if (createDocument(docId, clientId)) {
+          // step 2: send back HEADTEXT
+            String headText = documents.get(docId).headText;
+            System.out.println("Headtext: " + headText);
+            ChangeSet testChangeSet = new ChangeSet(headText);
+
+            Message response = new Message("server", "response", gson.toJson(testChangeSet));
+            sendMessage(gson.toJson(response));
+
+          } else {
+
+            System.out.println("[open] error: file cannot be created.");
+
+            sendErrorMessage("[open] error: file cannot be created.");
+          }
+        }
+        else if (action != null && action.equals("open")) {
           // step 1: open document for client
           String docId = msg.content;
           if (openDocument(docId, clientId)) {
           // step 2: send back HEADTEXT
             String headText = documents.get(docId).headText;
-            System.out.println(headText);
+            System.out.println("Headtext: " + headText);
             ChangeSet testChangeSet = new ChangeSet(headText);
 
             Message response = new Message("server", "response", gson.toJson(testChangeSet));
@@ -129,18 +149,23 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
       }
 
       private boolean openDocument(String docId, String clientId) {
-        this.document = new Document(docId, s3);
-        
-        this.document.open(connectionId, clientId);
-        
-        if (!documents.containsKey(docId))
+
+        if (!documents.containsKey(docId)) {
           documents.put(docId, this.document);
+          document = new Document(docId, s3);
+        }
+        else {
+          document = documents.get(docId);
+        }
+
+        document.open(connectionId, clientId);
+        
         return true;
       }
       
       private boolean closeDocument() {
         
-        if (document.isOpen) {
+        if (document != null && document.isOpen) {
           this.document.close(connectionId);
           return true;
         }
@@ -150,6 +175,15 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
       
       private boolean saveDocument() {
         this.document.save();
+        return true;
+      }
+
+      private boolean createDocument(String docId, String clientId) {
+        this.document = new Document(docId, s3);
+        documents.put(docId, this.document);
+        
+        this.document.create(connectionId, clientId);
+        
         return true;
       }
 
