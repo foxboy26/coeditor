@@ -19,7 +19,7 @@
 
             Coeditor.socket.onopen = function () {
                 Console.log('Info: WebSocket connection opened.');
-                /*var list1 = new Array();
+                var list1 = new Array();
                 list1[0] = {
                 		"type" : 1,
                 		"length" : 2,
@@ -73,9 +73,11 @@
                 		"changeList" : list2
                 };
                 
-                var test = follow(a,b);*/
+                var test1 = follow(a,b);
+                var test2 = follow(b,a);
                 
-                //Console.log(JSON.stringify(test));
+                Console.log(JSON.stringify(test1));
+                Console.log(JSON.stringify(test2));
                 
                 $('#coeditor').keypress(function(event) {
                 	
@@ -714,6 +716,173 @@
         	if(fset.oldLength != sset.oldLength){
         		alert("cannot compute follow!");
         	}
+        	var oldLength = fset.newLength;
+        	var newLength = 0;
+        	var retain = 0;
+        	var i = 0;
+        	var j = 0;
+        	var flist = fset.changeList;
+        	var slist = sset.changeList;
+        	var flen = flist.length;
+        	var slen = slist.length;
+        	var newlist = new Array();
+        	var count = 0;
+        	var changeset;
+        	while(i < flen && j < slen){
+        		if(flist[i].type == 0){
+        			var change;
+        			if(flist[i].content.length == 1){
+        				change = {
+        						"type" : 1,
+        						"length" : 1,
+        						"content" : retain
+        				};
+        				retain++;
+        				newLength += 1;
+        			} else {
+        				var l = parseInt(flist[i].content.length);
+        				change = {
+        						"type" : 1,
+        						"length" : l,
+        						"content" : retain + "-" + (retain + l - 1)
+        				};
+        				retain += l;
+        				newLength += l;
+        			}
+        			i++;
+        			newlist[count] = change;
+        			count++;
+        			continue;
+        		}
+        		if(flist[i].type == 1){
+        			if(slist[j].type == 0){
+        				newlist[count] = slist[j];
+            			count++;
+            			newLength += slist[j].length;
+            			j++;
+        			} else {
+	        			var fstart, fend, sstart, send;
+	            		var fcontent = flist[i].content;
+	            		var scontent = slist[j].content;
+	            		if(flist[i].length == 1){
+	    					fstart = fend = parseInt(fcontent);        						 
+	    				} else {
+	    					var tmp = fcontent.split("-");
+	    					fstart = parseInt(tmp[0]);
+	    					fend = parseInt(tmp[1]);
+	    				}
+	            		if(slist[j].length == 1){
+	    					sstart = send = parseInt(scontent);        						 
+	    				} else {
+	    					var tmp = scontent.split("-");
+	    					sstart = parseInt(tmp[0]);
+	    					send = parseInt(tmp[1]);
+	    				}
+	            		
+	            		if(fend < sstart){
+	            			retain += flist[i].length;
+	            			i++;
+	            		} else if(send < fstart){
+	            			j++;
+	            		} else if(sstart == fend){
+	            			var change = {
+	            					"type" : 1,
+	            					"length" : 1,
+	            					"content" : sstart
+	            			};
+	            			newlist[count] = change;
+	            			count++;
+	            			retain += flist[i].length;
+	            			i++;
+	            			newLength += 1;
+	            		} else if(fstart == send){
+	            			var change = {
+	            					"type" : 1,
+	            					"length" : 1,
+	            					"content" : fstart
+	            			};
+	            			newlist[count] = change;
+	            			count++;
+	            			j++;
+	            			newLength += 1;
+	            		} else if (sstart < fend){
+	            			var change = {
+	            					"type" : 1,
+	            					"length" : (fend - sstart + 1),
+	            					"content" : sstart + "-" + fend
+	            			};
+	            			newlist[count] = change;
+	            			count++;
+	            			retain += flist[i].length;
+	            			i++;
+	            			newLength += change.length;
+	            		} else if (fstart < send){
+	            			var change = {
+	            					"type" : 1,
+	            					"length" : (send - fstart + 1),
+	            					"content" : fstart + "-" + send
+	            			};
+	            			newlist[count] = change;
+	            			count++;
+	            			j++;
+	            			newLength += change.length;
+	            		}
+        			}
+            		
+        		}
+        	}	
+        		
+        	while(i < flen){	
+        		if(flist[i].type == 0){
+        			var change;
+        			if(flist[i].content.length == 1){
+        				change = {
+        						"type" : 1,
+        						"length" : 1,
+        						"content" : retain
+        				};
+        				retain++;
+        				newLength += 1;
+        			} else {
+        				var l = parseInt(flist[i].content.length);
+        				change = {
+        						"type" : 1,
+        						"length" : l,
+        						"content" : retain + "-" + (retain + l - 1)
+        				};
+        				retain += l;
+        				newLength += l;
+        			}
+        			newlist[count] = change;
+        			count++;
+        		}
+        		retain += parseInt(flist[i].content.length);
+        		i++;
+        	}
+        	
+        	while(j < slen){	
+        		if(slist[j].type == 0){
+    				newlist[count] = slist[j];
+        			count++;
+        			newLength += slist[j].length;     			
+    			}
+        		++j;
+        	}
+        	changeset = {
+        			"oldLength" : oldLength,
+        			"newLength" : newLength,
+        			"changeList" : newlist
+        	};
+        	return changeset;
+        }
+        
+        
+        
+        
+/*        function follow(fset, sset){
+        	if(fset.oldLength != sset.oldLength){
+        		alert("cannot compute follow!");
+        	}
         	var oldLength = fset.oldLength;
         	var newLength = 0;
         	var i = 0;
@@ -810,7 +979,7 @@
         			"changeList" : newlist
         	};
         	return changeset;
-        }
+        }*/
         
         
         
