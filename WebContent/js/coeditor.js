@@ -202,7 +202,7 @@
         	$('#coeditor')[0].value = newText;
         	
         	
-            $('#coeditor').setCaretPosition(3);
+            //$('#coeditor').setCaretPosition(3);
         };
         
         var Console = {};

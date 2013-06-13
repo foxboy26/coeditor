@@ -124,6 +124,12 @@ public class Document {
 		return this.activeUsers.keySet();
 	}
 	
+	public void updateClientVersion() {
+		for (Client c: this.activeUsers.values()) {
+			c.latestVersion = this.headRevision;
+		}
+	}
+	
 	public static void main(String[] args) {
 		KeyValueStore s3 = new KeyValueStore();
 		Document doc = new Document("test_doc", s3);

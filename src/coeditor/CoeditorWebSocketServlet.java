@@ -156,7 +156,7 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           
           document.addRevisionRecord(clientId, newChangePrime);
           
-          client.latestVersion = document.headRevision;
+          document.updateClientVersion();
           
       		System.out.println("[" + document.docId + "] headRevision: " + document.headRevision);
       		System.out.println("[" + document.docId + "] revisionList: " + document.revisionList);
