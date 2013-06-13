@@ -220,11 +220,11 @@
 
         function openDocument(docId) {
           
-          var oldDocId = $('#title').text(docId);
+          var oldDocId = $('#title').text();
           
-          alert(oldDocId);
-          
-          closeDocument(oldDocId);
+          if (oldDocId != 'Title' && oldDocId != docId) {
+        	  closeDocument(oldDocId);
+          }
           
           getUserList(docId);
 
@@ -360,7 +360,17 @@
         }
         
         function closeDocument(docId) {
-        	
+        	var message = {
+    				clientId : $('#userid').val(),
+    				action : "close",
+    				content : docId
+    			};
+    		
+    			var jmessage = JSON.stringify(message);
+    		
+    			Console.log('Info: [close request]' + jmessage);
+    			
+    			Coeditor.socket.send(jmessage);
         }
         
         function updateFileList(docId) {
