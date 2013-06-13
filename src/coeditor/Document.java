@@ -32,22 +32,26 @@ public class Document {
 		Client newClient = new Client(clientId);
 		
 		if (!isOpen) {
-			//TODO: connect to S3 to fetch the document.
 			headText = storage.getDocument(docId);
 			
-			Change initChange = new Change(headText);
-			ChangeSet initChangeSet = new ChangeSet(0, headText.length());
-			
-			initChangeSet.addChange(initChange);
-			
-			this.addRevisionRecord(clientId, initChangeSet);
-
-			newClient.latestVersion = headRevision;
-			
+			if (this.revisionList.isEmpty()) {
+				Change initChange = new Change(headText);
+				ChangeSet initChangeSet = new ChangeSet(0, headText.length());
+				
+				initChangeSet.addChange(initChange);
+				
+				this.addRevisionRecord(clientId, initChangeSet);
+			} else {
+				updateHeadtext();
+			}
 			isOpen = true;
 		} else {
 			//TODO
+			System.out.println("the doc has been opened, update and send new headText");
+			updateHeadtext();
 		}		
+		
+		newClient.latestVersion = headRevision;
 		
 		this.addUser(connectionId, newClient);
 	}
@@ -65,6 +69,7 @@ public class Document {
 	}
 	
 	public void close(int connectionId) {
+		
 		save();
 		
 		this.activeUsers.remove(connectionId);
@@ -100,12 +105,11 @@ public class Document {
 	}
 	
 	private void updateHeadtext() {
-		int length = revisionList.size();
-		for (int i = committedRevision; i < committedRevision + 10 && i < length; i++) {
-			System.out.println("headText: " + headText);
+		for (int i = committedRevision; i <= headRevision; i++) {
 			headText = revisionList.get(i).changeSet.applyTo(headText);
+			System.out.println("headText: " + headText);
 		}
-		committedRevision = Math.min(committedRevision + 10, revisionList.size());
+		committedRevision = headRevision;
 	}
 	
 	public void addUser(Integer clientId, Client user) {
@@ -125,12 +129,14 @@ public class Document {
 		Document doc = new Document("test_doc", s3);
 		doc.create(1, "xxx");
 		//doc.open(1, "xxx");
-		doc.open(2, "lzh");
+		//doc.open(2, "lzh");
 		ChangeSet init = new ChangeSet(0, 8);
-		ChangeSet a = new ChangeSet(8, 5);
+		init.addChange(new Change("baseball"));
+		
+		/*ChangeSet a = new ChangeSet(8, 5);
 		ChangeSet b = new ChangeSet(8, 5);
 		
-		init.addChange(new Change("baseball"));
+		
 		
 		a.addChange(new Change(0, 1));
 		a.addChange(new Change("si"));
@@ -139,17 +145,20 @@ public class Document {
 		b.addChange(new Change(0));
 		b.addChange(new Change("e"));
 		b.addChange(new Change(6));
-		b.addChange(new Change("ow"));
+		b.addChange(new Change("ow"));*/
 		
+		ChangeSet a = new ChangeSet(8, 7);
+		a.addChange(new Change(0, 6));
 		
 		doc.addRevisionRecord("xxx", init);
 		doc.addRevisionRecord("xxx", a);
 		System.out.println(doc.headRevision);
-		ChangeSet prime = doc.applyChangeSet(b, 1);
-		doc.addRevisionRecord("lzh", prime);
+		//ChangeSet prime = doc.applyChangeSet(b, 1);
+		//doc.addRevisionRecord("lzh", prime);
 		//doc.addRevisionRecord("xxx", b);
-		System.out.println(doc.headText);
-		System.out.println(doc.docId);
+		System.out.println(doc.headRevision);
+		System.out.println(doc.committedRevision);
+		//System.out.println(init.applyTo(""));
 		doc.save();
 		System.out.println(doc.headText);
 		System.out.println(doc.committedRevision);

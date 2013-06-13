@@ -223,6 +223,7 @@ public class ChangeSet {
 			} else {
 				String[] range = c.content.split("-");
 				int begin = Integer.parseInt(range[0]);
+				System.out.println(begin+c.length);
 				newDoc = newDoc + document.substring(begin, begin + c.length);
 			}
 		}
@@ -281,7 +282,16 @@ public class ChangeSet {
 		
 		
 		String headText = "baseball";
-		System.out.println(a.applyTo(headText));
+		
+		ChangeSet test1 = new ChangeSet(0, 14);
+		ChangeSet test2 = new ChangeSet(14, 15);
+		
+		a.addChange(new Change("ldldaaaaaaao x"));
+		
+		b.addChange(new Change(0, 13));
+		b.addChange((new Change("d")));
+		
+		System.out.println(ChangeSet.follows(headChange, ba));
 		System.out.println(b.applyTo(headText));
 	}
 }

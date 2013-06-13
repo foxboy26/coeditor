@@ -75,7 +75,7 @@
                 
                 var test = follow(a,b);*/
                 
-                Console.log(JSON.stringify(test));
+                //Console.log(JSON.stringify(test));
                 
                 $('#coeditor').keypress(function(event) {
                 	
@@ -123,14 +123,18 @@
             			updateUserStatus(activeUsers[i], 'online');
             		}
             	} else if (action == "ACK" && clientId == "server"){
+            		alert("haha");
             		A = combine(A, X);
-            		var newmessage = {
-                			"clientid": $('#userid').val(),
-                			"action" : "newChange",
-                			"content": JSON.stringify(Y)
-                	};
-                               
-		            Coeditor.socket.send(newmessage);  
+            		if (Y != null) {
+	            		var newmessage = {
+	                			"clientId": $('#userid').val(),
+	                			"action" : "newChange",
+	                			"content": JSON.stringify(Y)
+	                	};
+	                               
+			            Coeditor.socket.send(JSON.stringify(newmessage));
+            		}
+            		
             		X = Y;
             		Y = null;		
             	} else if (action == "open" && clientId == "server"){
@@ -435,14 +439,14 @@
         	
         	if(X == null){
         		var newmessage = {
-            			"clientid": $('#userid').val(),
+            			"clientId": $('#userid').val(),
             			"action" : "newChange",
             			"content": JSON.stringify(Y)
             	};
                            
-	            Coeditor.socket.send(newmessage);  
+	            Coeditor.socket.send(JSON.stringify(newmessage));  
         		X = Y;
-        		var jset = JSON.stringify(Y);
+        		var jset = JSON.stringify(newmessage);
             	Console.log(jset);
         		Y = null;		
         	}
@@ -665,7 +669,21 @@
 	        		Y = combine(Y, changeset);
 	        	
 	        	var jset = JSON.stringify(Y);
-	        	Console.log(jset);
+	        	
+	        	if(X == null){
+	        		var newmessage = {
+	            			"clientId": $('#userid').val(),
+	            			"action" : "newChange",
+	            			"content": JSON.stringify(Y)
+	            	};
+	                           
+		            Coeditor.socket.send(JSON.stringify(newmessage));  
+	        		X = Y;
+	        		var jset = JSON.stringify(newmessage);
+	            	Console.log(jset);
+	        		Y = null;		
+	        	}
+	        	
         	} 	
         };
         

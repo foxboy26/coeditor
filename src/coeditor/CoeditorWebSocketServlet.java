@@ -52,6 +52,8 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
       @Override
       protected void onOpen(WsOutbound outbound) {
 
+      	System.out.println("new connection: " + connectionId);
+      	
         connections.put(connectionId, this);
 
       }
@@ -82,7 +84,7 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           if (createDocument(docId, clientId)) {
           // step 2: send back HEADTEXT
             String headText = documents.get(docId).headText;
-            System.out.println("Headtext: " + headText);
+            
             ChangeSet testChangeSet = new ChangeSet(headText);
 
             Message response = new Message("server", "response", gson.toJson(testChangeSet));
@@ -101,7 +103,6 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           if (openDocument(docId, clientId)) {
           // step 2: send back HEADTEXT
             String headText = documents.get(docId).headText;
-            System.out.println("Headtext: " + headText);
             ChangeSet testChangeSet = new ChangeSet(headText);
 
             Message response = new Message("server", "open", gson.toJson(testChangeSet));
@@ -140,7 +141,12 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
 
           Client client = document.activeUsers.get(connectionId);
           
+          System.out.println("[" + client.clientId + "] newChange: " + newChange);
+          System.out.println("[" + client.clientId + "] latestVersion: " + client.latestVersion);
+      		System.out.println("[" + document.docId + "] headRevision: " + document.headRevision);
           ChangeSet newChangePrime = this.document.applyChangeSet(newChange, client.latestVersion);
+          
+          System.out.println("[" + client.clientId + "] C': " + newChangePrime);
           
           Message syncMsg = new Message("server", "sync", gson.toJson(newChangePrime));
           broadcast(gson.toJson(syncMsg));
@@ -151,7 +157,10 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           document.addRevisionRecord(clientId, newChangePrime);
           
           client.latestVersion = document.headRevision;
-
+          
+      		System.out.println("[" + document.docId + "] headRevision: " + document.headRevision);
+      		System.out.println("[" + document.docId + "] revisionList: " + document.revisionList);
+      		System.out.println("[" + client.clientId + "] latestVersion: " + client.latestVersion);
         } else if (action != null && action.equals("getActiveUsers")) {
         	String docId = msg.content;
         	System.out.println(getActiveUsers(docId));
