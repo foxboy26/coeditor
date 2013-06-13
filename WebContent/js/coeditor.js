@@ -19,7 +19,7 @@
 
             Coeditor.socket.onopen = function () {
                 Console.log('Info: WebSocket connection opened.');
-                var list1 = new Array();
+                /*var list1 = new Array();
                 list1[0] = {
                 		"type" : 1,
                 		"length" : 2,
@@ -77,7 +77,7 @@
                 var test2 = follow(b,a);
                 
                 Console.log(JSON.stringify(test1));
-                Console.log(JSON.stringify(test2));
+                Console.log(JSON.stringify(test2));*/
                 
                 $('#coeditor').keypress(function(event) {
                 	
@@ -135,7 +135,7 @@
             			updateUserStatus(activeUsers[i], 'online');
             		}
             	} else if (action == "ACK" && clientId == "server"){
-            		alert("haha");
+            		Console.log("ACK received");
             		A = combine(A, X);
             		if (Y != null) {
 	            		var newmessage = {
@@ -181,12 +181,11 @@
         	
         	for(var i = 0; i < length; ++i){
         		var change = changeList[i];
-        		alert("type:" + change.type);
         		//new
         		if(change.type == 0){
         			newText += change.content;
         		} else {
-        			alert("content length:" + change.content.length);
+        			//alert("content length:" + change.content.length);
         			if(change.content.length == 1){
         				newText += oldText.charAt(parseInt(change.content));
         			}
@@ -197,7 +196,7 @@
         			}
         		}
         	}
-        	alert("newtext:" + newText);
+        	//alert("newtext:" + newText);
         	oldLength = newText.length;
         	$('#coeditor')[0].value = newText;
         	
@@ -220,6 +219,12 @@
         
 
         function openDocument(docId) {
+          
+          var oldDocId = $('#title').text(docId);
+          
+          alert(oldDocId);
+          
+          closeDocument(oldDocId);
           
           getUserList(docId);
 
@@ -276,7 +281,7 @@
           var docName = $('input[name=title]').val();
           var userId = $('input[name=userid]').val();
 
-          alert(docName + userId);
+          //alert(docName + userId);
           $.getJSON(
             'createDocument.jsp?docName=' + docName + '&userId=' + userId,
             function(data) {
@@ -321,7 +326,7 @@
         }
 
         function deleteDocument(docName) {
-        	alert(docName);
+        	//alert(docName);
         	$.getJSON('deleteDocument.jsp?docName=' + docName, function(data) {
         		if (data == 'success') {
             	var message = {
@@ -352,7 +357,12 @@
                 	getUserList(docName);
         		}
             });
-        }        
+        }
+        
+        function closeDocument(docId) {
+        	
+        }
+        
         function updateFileList(docId) {
           var newli = document.createElement("li");  // Create with DOM
           newli.innerHTML= '<a href="#" id="' + docId + '" onclick="openDocument("' + docId + '">' + docId  +'</a>'

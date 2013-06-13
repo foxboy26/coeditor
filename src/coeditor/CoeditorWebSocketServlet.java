@@ -217,7 +217,8 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
       }
       
       private boolean saveDocument() {
-        this.document.save();
+      	if (this.document.committedRevision < this.document.headRevision)
+        	this.document.save();
         return true;
       }
       
