@@ -110,10 +110,20 @@
             	if(action == "sync" && clientId == "server"){
             		//TODO:
             		var B = JSON.parse(message.content);
+            		Console.log('B ' + JSON.stringify(B));
+            		
             		var Aprime = combine(A, B);
+            		Console.log('Aprime ' + JSON.stringify(Aprime));
+            		
             		var Xprime = follow(B, X);
+            		Console.log('Xprime ' + JSON.stringify(Xprime));
+
             		var Yprime = follow(follow(X,B), Y);
+            		Console.log('Yprime ' + JSON.stringify(Yprime));
+
             		var D = follow(Y, follow(X,B));
+            		Console.log('D ' + JSON.stringify(D));
+
             		A = Aprime;
             		X = Xprime;
             		Y = Yprime;
@@ -141,7 +151,7 @@
             		Y = null;		
             	} else if (action == "open" && clientId == "server"){
             		A = JSON.parse(message.content);
-            		Textarea.update(message.content);
+            		Textarea.update(A);
             	}
             };
         });
@@ -157,9 +167,8 @@
         
 
         var Textarea = {};
-        Textarea.update = function(message) {
-        	var changeset = JSON.parse(message);
-        	var oldText = $('#coeditor').value;
+        Textarea.update = function(changeset) {
+        	var oldText = $('#coeditor').val();
         	//alert(oldText);
         	var changeList = changeset.changeList;
         	var length = changeList.length;
@@ -713,167 +722,171 @@
         
         
         function follow(fset, sset){
-        	if(fset.oldLength != sset.oldLength){
-        		alert("cannot compute follow!");
-        	}
-        	var oldLength = fset.newLength;
-        	var newLength = 0;
-        	var retain = 0;
-        	var i = 0;
-        	var j = 0;
-        	var flist = fset.changeList;
-        	var slist = sset.changeList;
-        	var flen = flist.length;
-        	var slen = slist.length;
-        	var newlist = new Array();
-        	var count = 0;
-        	var changeset;
-        	while(i < flen && j < slen){
-        		if(flist[i].type == 0){
-        			var change;
-        			if(flist[i].content.length == 1){
-        				change = {
-        						"type" : 1,
-        						"length" : 1,
-        						"content" : retain
-        				};
-        				retain++;
-        				newLength += 1;
-        			} else {
-        				var l = parseInt(flist[i].content.length);
-        				change = {
-        						"type" : 1,
-        						"length" : l,
-        						"content" : retain + "-" + (retain + l - 1)
-        				};
-        				retain += l;
-        				newLength += l;
-        			}
-        			i++;
-        			newlist[count] = change;
-        			count++;
-        			continue;
-        		}
-        		if(flist[i].type == 1){
-        			if(slist[j].type == 0){
+        	if (fset == null || sset == null) {
+        		return sset;
+        	} else {
+        		if(fset.oldLength != sset.oldLength){
+            		alert("cannot compute follow!");
+            	}
+            	var oldLength = fset.newLength;
+            	var newLength = 0;
+            	var retain = 0;
+            	var i = 0;
+            	var j = 0;
+            	var flist = fset.changeList;
+            	var slist = sset.changeList;
+            	var flen = flist.length;
+            	var slen = slist.length;
+            	var newlist = new Array();
+            	var count = 0;
+            	var changeset;
+            	while(i < flen && j < slen){
+            		if(flist[i].type == 0){
+            			var change;
+            			if(flist[i].content.length == 1){
+            				change = {
+            						"type" : 1,
+            						"length" : 1,
+            						"content" : retain
+            				};
+            				retain++;
+            				newLength += 1;
+            			} else {
+            				var l = parseInt(flist[i].content.length);
+            				change = {
+            						"type" : 1,
+            						"length" : l,
+            						"content" : retain + "-" + (retain + l - 1)
+            				};
+            				retain += l;
+            				newLength += l;
+            			}
+            			i++;
+            			newlist[count] = change;
+            			count++;
+            			continue;
+            		}
+            		if(flist[i].type == 1){
+            			if(slist[j].type == 0){
+            				newlist[count] = slist[j];
+                			count++;
+                			newLength += slist[j].length;
+                			j++;
+            			} else {
+    	        			var fstart, fend, sstart, send;
+    	            		var fcontent = flist[i].content;
+    	            		var scontent = slist[j].content;
+    	            		if(flist[i].length == 1){
+    	    					fstart = fend = parseInt(fcontent);        						 
+    	    				} else {
+    	    					var tmp = fcontent.split("-");
+    	    					fstart = parseInt(tmp[0]);
+    	    					fend = parseInt(tmp[1]);
+    	    				}
+    	            		if(slist[j].length == 1){
+    	    					sstart = send = parseInt(scontent);        						 
+    	    				} else {
+    	    					var tmp = scontent.split("-");
+    	    					sstart = parseInt(tmp[0]);
+    	    					send = parseInt(tmp[1]);
+    	    				}
+    	            		
+    	            		if(fend < sstart){
+    	            			retain += flist[i].length;
+    	            			i++;
+    	            		} else if(send < fstart){
+    	            			j++;
+    	            		} else if(sstart == fend){
+    	            			var change = {
+    	            					"type" : 1,
+    	            					"length" : 1,
+    	            					"content" : sstart
+    	            			};
+    	            			newlist[count] = change;
+    	            			count++;
+    	            			retain += flist[i].length;
+    	            			i++;
+    	            			newLength += 1;
+    	            		} else if(fstart == send){
+    	            			var change = {
+    	            					"type" : 1,
+    	            					"length" : 1,
+    	            					"content" : fstart
+    	            			};
+    	            			newlist[count] = change;
+    	            			count++;
+    	            			j++;
+    	            			newLength += 1;
+    	            		} else if (sstart < fend){
+    	            			var change = {
+    	            					"type" : 1,
+    	            					"length" : (fend - sstart + 1),
+    	            					"content" : sstart + "-" + fend
+    	            			};
+    	            			newlist[count] = change;
+    	            			count++;
+    	            			retain += flist[i].length;
+    	            			i++;
+    	            			newLength += change.length;
+    	            		} else if (fstart < send){
+    	            			var change = {
+    	            					"type" : 1,
+    	            					"length" : (send - fstart + 1),
+    	            					"content" : fstart + "-" + send
+    	            			};
+    	            			newlist[count] = change;
+    	            			count++;
+    	            			j++;
+    	            			newLength += change.length;
+    	            		}
+            			}
+                		
+            		}
+            	}	
+            		
+            	while(i < flen){	
+            		if(flist[i].type == 0){
+            			var change;
+            			if(flist[i].content.length == 1){
+            				change = {
+            						"type" : 1,
+            						"length" : 1,
+            						"content" : retain
+            				};
+            				retain++;
+            				newLength += 1;
+            			} else {
+            				var l = parseInt(flist[i].content.length);
+            				change = {
+            						"type" : 1,
+            						"length" : l,
+            						"content" : retain + "-" + (retain + l - 1)
+            				};
+            				retain += l;
+            				newLength += l;
+            			}
+            			newlist[count] = change;
+            			count++;
+            		}
+            		retain += parseInt(flist[i].content.length);
+            		i++;
+            	}
+            	
+            	while(j < slen){	
+            		if(slist[j].type == 0){
         				newlist[count] = slist[j];
             			count++;
-            			newLength += slist[j].length;
-            			j++;
-        			} else {
-	        			var fstart, fend, sstart, send;
-	            		var fcontent = flist[i].content;
-	            		var scontent = slist[j].content;
-	            		if(flist[i].length == 1){
-	    					fstart = fend = parseInt(fcontent);        						 
-	    				} else {
-	    					var tmp = fcontent.split("-");
-	    					fstart = parseInt(tmp[0]);
-	    					fend = parseInt(tmp[1]);
-	    				}
-	            		if(slist[j].length == 1){
-	    					sstart = send = parseInt(scontent);        						 
-	    				} else {
-	    					var tmp = scontent.split("-");
-	    					sstart = parseInt(tmp[0]);
-	    					send = parseInt(tmp[1]);
-	    				}
-	            		
-	            		if(fend < sstart){
-	            			retain += flist[i].length;
-	            			i++;
-	            		} else if(send < fstart){
-	            			j++;
-	            		} else if(sstart == fend){
-	            			var change = {
-	            					"type" : 1,
-	            					"length" : 1,
-	            					"content" : sstart
-	            			};
-	            			newlist[count] = change;
-	            			count++;
-	            			retain += flist[i].length;
-	            			i++;
-	            			newLength += 1;
-	            		} else if(fstart == send){
-	            			var change = {
-	            					"type" : 1,
-	            					"length" : 1,
-	            					"content" : fstart
-	            			};
-	            			newlist[count] = change;
-	            			count++;
-	            			j++;
-	            			newLength += 1;
-	            		} else if (sstart < fend){
-	            			var change = {
-	            					"type" : 1,
-	            					"length" : (fend - sstart + 1),
-	            					"content" : sstart + "-" + fend
-	            			};
-	            			newlist[count] = change;
-	            			count++;
-	            			retain += flist[i].length;
-	            			i++;
-	            			newLength += change.length;
-	            		} else if (fstart < send){
-	            			var change = {
-	            					"type" : 1,
-	            					"length" : (send - fstart + 1),
-	            					"content" : fstart + "-" + send
-	            			};
-	            			newlist[count] = change;
-	            			count++;
-	            			j++;
-	            			newLength += change.length;
-	            		}
+            			newLength += slist[j].length;     			
         			}
-            		
-        		}
-        	}	
-        		
-        	while(i < flen){	
-        		if(flist[i].type == 0){
-        			var change;
-        			if(flist[i].content.length == 1){
-        				change = {
-        						"type" : 1,
-        						"length" : 1,
-        						"content" : retain
-        				};
-        				retain++;
-        				newLength += 1;
-        			} else {
-        				var l = parseInt(flist[i].content.length);
-        				change = {
-        						"type" : 1,
-        						"length" : l,
-        						"content" : retain + "-" + (retain + l - 1)
-        				};
-        				retain += l;
-        				newLength += l;
-        			}
-        			newlist[count] = change;
-        			count++;
-        		}
-        		retain += parseInt(flist[i].content.length);
-        		i++;
+            		++j;
+            	}
+            	changeset = {
+            			"oldLength" : oldLength,
+            			"newLength" : newLength,
+            			"changeList" : newlist
+            	};
+            	return changeset;
         	}
-        	
-        	while(j < slen){	
-        		if(slist[j].type == 0){
-    				newlist[count] = slist[j];
-        			count++;
-        			newLength += slist[j].length;     			
-    			}
-        		++j;
-        	}
-        	changeset = {
-        			"oldLength" : oldLength,
-        			"newLength" : newLength,
-        			"changeList" : newlist
-        	};
-        	return changeset;
         }
         
         
