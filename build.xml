@@ -126,7 +126,7 @@
 
 -->
 
-  <property name="app.name"      value="myapp"/>
+  <property name="app.name"      value="coeditor"/>
   <property name="app.path"      value="/${app.name}"/>
   <property name="app.version"   value="0.1-dev"/>
   <property name="build.home"    value="${basedir}/build"/>
