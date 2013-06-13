@@ -149,6 +149,8 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           sendMessage(gson.toJson(ackMsg));
           
           document.addRevisionRecord(clientId, newChangePrime);
+          
+          client.latestVersion = document.headRevision;
 
         } else if (action != null && action.equals("getActiveUsers")) {
         	String docId = msg.content;

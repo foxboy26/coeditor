@@ -87,7 +87,7 @@ public class Document {
 	public ChangeSet applyChangeSet(ChangeSet cs, int revisionNumber) {
 		ChangeSet result = cs;
 		
-		for (int i = revisionNumber; i < headRevision; i++) {
+		for (int i = revisionNumber + 1; i <= headRevision; i++) {
 			result = ChangeSet.follows(this.revisionList.get(i).changeSet, cs);
 		}
 		
@@ -123,9 +123,10 @@ public class Document {
 	public static void main(String[] args) {
 		KeyValueStore s3 = new KeyValueStore();
 		Document doc = new Document("test_doc", s3);
-		//doc.create(1, "xxx");
-		doc.open(1, "xxx");
-		/*ChangeSet init = new ChangeSet(0, 8);
+		doc.create(1, "xxx");
+		//doc.open(1, "xxx");
+		doc.open(2, "lzh");
+		ChangeSet init = new ChangeSet(0, 8);
 		ChangeSet a = new ChangeSet(8, 5);
 		ChangeSet b = new ChangeSet(8, 5);
 		
@@ -143,7 +144,10 @@ public class Document {
 		
 		doc.addRevisionRecord("xxx", init);
 		doc.addRevisionRecord("xxx", a);
-		//doc.addRevisionRecord("xxx", b);*/
+		System.out.println(doc.headRevision);
+		ChangeSet prime = doc.applyChangeSet(b, 1);
+		doc.addRevisionRecord("lzh", prime);
+		//doc.addRevisionRecord("xxx", b);
 		System.out.println(doc.headText);
 		System.out.println(doc.docId);
 		doc.save();
