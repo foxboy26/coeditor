@@ -192,7 +192,7 @@ public class KeyValueStore {
 	public static void main(String[] args) {
 		KeyValueStore kv = new KeyValueStore();
 
-    kv.createBucket();
+                kv.createBucket();
 		// List the buckets in your account
 		System.out.println("Listing buckets");
 		for (Bucket bucket : kv.s3.listBuckets()) {
