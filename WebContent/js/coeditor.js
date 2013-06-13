@@ -60,6 +60,14 @@
                                
 		            //Coeditor.socket.send(message);  
                 });      
+                
+                $('#coeditor').keydown(function(event) {
+                	
+                	var changeSet = computeDeleteChangeSet(event);
+                	if(changeSet != null){
+                		Console.log(changeSet);
+                	}
+                });      
                                
             };
 
@@ -127,8 +135,8 @@
         		}
         	}
         	alert("newtext:" + newText);
-        	oldLength = newText.length();
-        	$('#coeditor').value = newText;
+        	oldLength = newText.length;
+        	$('#coeditor')[0].value = newText;
         };
         
         var Console = {};
@@ -167,8 +175,8 @@
         }
 
         function createDocument() {
-          var docName = $('input[name=title]').val()
-          var userId = $('input[name=userid]').val()
+          var docName = $('input[name=title]').val();
+          var userId = $('input[name=userid]').val();
 
           alert(docName + userId);
           $.getJSON(
@@ -198,7 +206,7 @@
 
         function updateFileList(docId) {
           var newli = document.createElement("li");  // Create with DOM
-          newli.innerHTML= '<a href="#" name="file" onclick="openDocument("' + docId + '">' + docId  +'</a>'
+          newli.innerHTML= '<a href="#" name="file" onclick="openDocument("' + docId + '">' + docId  +'</a>';
           $('#filelist').append(newli);
         }
         
@@ -224,7 +232,7 @@
         	var cursorPosition = $('#coeditor').getSelectionStart();	
         		
         		//$('#coeditor').getSelectionStart();
-        	alert("cursorPosition:" + cursorPosition);
+        	//alert("cursorPosition:" + cursorPosition);
         	var changeList = new Array();
         	if(cursorPosition == 0){
         		var change = {
@@ -303,44 +311,37 @@
         		var str = "";
         		while(j < slength){       			
 					var scontent = slist[j].content;
-        			var fstart, sstart, fend, send;
+        			var sstart, fend, send;
         			
         			if(slist[j].type == 1){              				
     					if(slist[j].length == 1){
     						sstart = send = parseInt(scontent);        						 
     					} else {
-    						sstart = parseInt(scontent.charAt(0));
-    						send = parseInt(scontent.charAt(2));
+    						var tmp = scontent.split("-");
+    						sstart = parseInt(tmp[0]);
+    						send = parseInt(tmp[1]);
     					}
         				while(lastIndex < sstart){
         					var fcontent = flist[i].content;
-        					if(flist[i].type == 1){
-        						if(str != ""){
-                					var newchange = {
-        									"type" : 0,
-        									"length" : str.length,
-        									"content" : str
-        								};
-        								
-                					newlist[count++] = newchange;
-        								str = "";	
-                				}
+        					if(flist[i].type == 1){    						
         						if(flist[i].length <= sstart - lastIndex){
+									lastIndex += flist[i].length;
 									++i;
-									lastIndext += flist[i].length;								
 								} else if(flist[i].length == sstart - lastIndex + 1) {
-									flist[i].content  = fcontent.charAt[2];
+									var tmp = fcontent.split("-");
+									flist[i].content  = tmp[1];
 									flist[i].length = 1;
 									lastIndex += (sstart - lastIndex);
 								} else {
-									flist[i].content  = (parseInt(fcontent.charAt[0]) + sstart - lastIndex + 1) + "-" + fcontent.charAt[2];
+									var tmp = fcontent.split("-");
+									flist[i].content  = (parseInt(tmp[0]) + sstart - lastIndex) + "-" + tmp[1];
 									flist[i].length = flist[i].length - (sstart - lastIndex);
-									lastIndex += (sstart - lastIndex);
+									lastIndex = sstart;
 								}       		
         					} else {
-        						if(flist[i].length <= sstart - lastIndex){
+        						if(flist[i].length <= sstart - lastIndex){									
+									lastIndex += flist[i].length;		
 									++i;
-									lastIndext += flist[i].length;								
 								} else {
 									flist[i].content  = fcontent.substring(sstart - lastIndex);
 									flist[i].length = flist[i].length - (sstart - lastIndex);
@@ -364,22 +365,52 @@
     									lastIndex += (send - lastIndex + 1);
     								}        								        						
         						} else {
-/*        							if(flist[i].length == 1){
-                						fstart = fend = parseInt(fcontent);        						 
-                					} else {
-                						fstart = parseInt(fcontent.charAt(0));
-                						fend = parseInt(fcontent.charAt(2));
-                					}*/
-        							if((lastIndex + flist[i].length) < send){
-        								newlist[count++] = flist[i++];       														
+        							if(str != ""){
+                    					var newchange = {
+            									"type" : 0,
+            									"length" : str.length,
+            									"content" : str
+            								};
+            								
+                    					newlist[count] = newchange;
+                    					count++;
+            							str = "";	
+                    				}
+        							if((lastIndex + flist[i].length) <= send + 1){       								
+        								lastIndex += flist[i].length;
+        								newlist[count] = flist[i]; 
+        								i++;
+        								count++;
+        								
+        							} else if((lastIndex + flist[i].length) == send + 2) {
+        								newlist[count] = flist[i];  
+        								count++;
+        								var tmp = fcontent.split("-");
+    									flist[i].content  = tmp[1];
+    									flist[i].length = 1;
+    									var tail = (send - lastIndex) > 1 ?  ("-" + (parseInt(tmp[0]) + send - lastIndex)) : "";
+    									var change = {
+    										"type" : 1,
+    										"length" : (send - lastIndex + 1),
+    										"content" : tmp[0] + tail
+    									};
+    									lastIndex = send+1;
+    									newlist[count] = change;  
+        								count++;
         							} else {
-        								lastIndex = send + 1;
-        								var newchange = {
-        										"type" : 1,
-        										"length" : send - lastIndex + 1,
-        										"content" : lastIndex + "-" + send
-        								};
-        								newlist[count++] = flist[i++];        									
+        								
+        								var tmp = fcontent.split("-");
+    									flist[i].content  = (parseInt(tmp[0]) + send - lastIndex + 1) + "-" + tmp[1];
+    									flist[i].length = flist[i].length - (send - lastIndex + 1);
+    									var tail = (send - lastIndex) > 1 ?  ("-" + (parseInt(tmp[0]) + send - lastIndex)) : "";
+    									var change = {
+    										"type" : 1,
+    										"length" : (send - lastIndex + 1),
+    										"content" : tmp[0] + tail
+    									};
+    									lastIndex = send + 1;
+        								newlist[count] = change;  
+        								count++;
         							}
         						}
         						
@@ -396,7 +427,8 @@
 							"content" : str
 						};
 						
-					newlist[count++] = newchange;
+					newlist[count] = newchange;
+					count++;
 				}
         	}
         	newset = {
@@ -406,67 +438,78 @@
         	};
         	return newset;
         }
-           
         
-        /*function mergeSet(fset, sset){
-        	var lastIndex = 0;
-        	var fold = fset.oldLength;
-        	var sold = sset.oldLength;
-        	var newset = {};
-        	 
-        	if(fold != sold){
-        		alert("cannot merge the two sets!");       		
-        	} else {
-        		newset.oldLength = fold;
-        		var newLength = oldLength;
-        		var i = 0, j = 0;
-        		var flist = fset.changeList;
-        		var slist = sset.changeList;
-        		var flength = flist.length;
-        		var slength = slist.length;
-        		var list = new Array();
-        		var index = 0;
-        		while(i < flength && j < slength){
-        			if(flist[i].type == 0){
-        				list[index++] = flist[i++];    				
-        			} else {
-        				if(slist[j].type == 0){
-        					list[index++] = slist[j++]; 
-        				} else {
-        					var fcontent = flist[i].content;
-        					var scontent = slist[j].content;
-        					var fstart, sstart, fend, send;
-        					if(fcontent.length == 1){
-        						fstart = fend = parseInt(fcontent);        						 
-        					} else {
-        						fstart = parseInt(fcontent.charAt(0));
-        						fend = parseInt(fcontent.charAt(2));
-        					}
-        					if(scontent.length == 1){
-        						sstart = send = parseInt(scontent);        						 
-        					} else {
-        						sstart = parseInt(scontent.charAt(0));
-        						send = parseInt(scontent.charAt(2));
-        					}
-        					
-        					if(fend < sstart){
-        						if(fstart )
-        						list[index++] = flist[i++]; 
-        					} else if(send < fstart){
-        						list[index++] = flist[j++]; 
-        					} else if(fend > sstart){
-        						var newlist = {
-        							"type" : 1,
-        							"length" : (sstart - fend + 1),
-        							"content" : sstart + "-" + fend
-        						};
-        						list[index++] = newlist;
-        					}
-        				}
-        			}
-        		}
-        	}
-        }*/
+        
+        
+        function computeDeleteChangeSet(event){
+        	var keycode = (event.keyCode ? event.keyCode : event.which);
+        	var oldLength = $('#coeditor').val().length;
+        	var cursorPosition = $('#coeditor').getSelectionStart();
+        	var changelist = new Array();
+        	if(keycode == 8){  	
+	        	var count = 0;
+	        	var change;
+	        	var changeset;
+	        	
+	        	if(cursorPosition > oldLength || oldLength == 0 || cursorPosition == 0){
+	        		return null;
+	        	} else if(oldLength == 1){
+	        		changeset = {
+		        			"oldLength" : 1,
+		        			"newLength" : 0,
+		        			"changeList" : []
+		        	};
+	        	} else{
+	        		if(cursorPosition == 2){
+		        		change = {
+			        			"type" : 1,
+			        			"length" : 1,
+			        			"content" : "0"
+			        	};
+		        		changelist[count] = change;
+		        		count++;
+	        		} else if(cursorPosition > 2){
+		        		change = {
+			        			"type" : 1,
+			        			"length" : cursorPosition - 1,
+			        			"content" : 0 + "-" + (cursorPosition - 2)
+			        	};
+		        		changelist[count] = change;
+		        		count++;
+	        		}
+	        	
+		        	if(oldLength - cursorPosition == 1){
+		        		change = {
+			        			"type" : 1,
+			        			"length" : 1,
+			        			"content" : oldLength - 1
+			        	};
+		        		changelist[count] = change;
+		        	} else if (oldLength - cursorPosition > 1){
+		        		change = {
+			        			"type" : 1,
+			        			"length" : oldLength - cursorPosition,
+			        			"content" : cursorPosition + "-" + (oldLength - 1)
+			        	};
+		        		changelist[count] = change;
+		        	}  	
+		        	changeset = {
+		        			"oldLength" : oldLength,
+		        			"newLength" : (oldLength - 1),
+		        			"changeList" : changelist	
+		        	};
+	        	}
+	
+	        	if(Y == null)
+	        		Y = changeset;
+	        	else
+	        		Y = combine(Y, changeset);
+	        	
+	        	var jset = JSON.stringify(Y);
+	        	Console.log(jset);
+        	} 	
+        };
+        
         
         
         function getLastChange(oldLength, curPos, isDelete){
@@ -508,7 +551,7 @@
 
         		return pos;
         	}
-        }
+        };
 
 
   

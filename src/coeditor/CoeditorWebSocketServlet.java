@@ -151,8 +151,9 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
       private boolean openDocument(String docId, String clientId) {
 
         if (!documents.containsKey(docId)) {
-          documents.put(docId, this.document);
           document = new Document(docId, s3);
+          documents.put(docId, this.document);
+          
         }
         else {
           document = documents.get(docId);
