@@ -127,6 +127,7 @@
             		A = Aprime;
             		X = Xprime;
             		Y = Yprime;
+            		
             		Textarea.update(D);
             	}
             	else if (action == "activeUsers" && clientId == "server"){
@@ -167,7 +168,7 @@
         
 
         var Textarea = {};
-        Textarea.update = function(changeset) {
+        Textarea.update = function(changeset, curPos) {
         	var oldText = $('#coeditor').val();
         	//alert(oldText);
         	var changeList = changeset.changeList;
@@ -186,7 +187,7 @@
         			newText += change.content;
         		} else {
         			//alert("content length:" + change.content.length);
-        			if(change.content.length == 1){
+        			if(change.length == 1){
         				newText += oldText.charAt(parseInt(change.content));
         			}
         			else{
@@ -199,10 +200,13 @@
         	}
         	//alert("newtext:" + newText);
         	oldLength = newText.length;
+        	var newpos = updateCursorPosition(changeset, curPos);
+        	
         	$('#coeditor')[0].value = newText;
+        	$('#coeditor').setCaretPosition(newpos);
         	
         	
-            //$('#coeditor').setCaretPosition(3);
+            
         };
         
         var Console = {};
@@ -912,111 +916,7 @@
             	return changeset;
         	}
         }
-        
-        
-        
-        
-/*        function follow(fset, sset){
-        	if(fset.oldLength != sset.oldLength){
-        		alert("cannot compute follow!");
-        	}
-        	var oldLength = fset.oldLength;
-        	var newLength = 0;
-        	var i = 0;
-        	var j = 0;
-        	var flist = fset.changeList;
-        	var slist = sset.changeList;
-        	var flen = flist.length;
-        	var slen = slist.length;
-        	var newlist = new Array();
-        	var count = 0;
-        	var changeset;
-        	while(i < flen && j < slen){
-        		if(flist[i].type == 0){
-        			newlist[count] = flist[i];
-        			count++;
-        			newLength += flist[i].length;
-        			i++;
-        			continue;
-        		}
-        		if(slist[j].type == 0){
-        			newlist[count] = slist[j];
-        			count++;
-        			newLength += slist[j].length;
-        			j++;
-        			continue;
-        		}
-        		var fstart, fend, sstart, send;
-        		var fcontent = flist[i].content;
-        		var scontent = slist[j].content;
-        		if(flist[i].length == 1){
-					fstart = fend = parseInt(fcontent);        						 
-				} else {
-					var tmp = fcontent.split("-");
-					fstart = parseInt(tmp[0]);
-					fend = parseInt(tmp[1]);
-				}
-        		if(slist[j].length == 1){
-					sstart = send = parseInt(scontent);        						 
-				} else {
-					var tmp = scontent.split("-");
-					sstart = parseInt(tmp[0]);
-					send = parseInt(tmp[1]);
-				}
-        		if(fend < sstart){
-        			i++;
-        		} else if(send < fstart){
-        			j++;
-        		} else if(sstart == fend){
-        			var change = {
-        					"type" : 1,
-        					"length" : 1,
-        					"content" : sstart
-        			};
-        			newlist[count] = change;
-        			count++;
-        			i++;
-        			newLength += 1;
-        		} else if(fstart == send){
-        			var change = {
-        					"type" : 1,
-        					"length" : 1,
-        					"content" : fstart
-        			};
-        			newlist[count] = change;
-        			count++;
-        			j++;
-        			newLength += 1;
-        		} else if (sstart < fend){
-        			var change = {
-        					"type" : 1,
-        					"length" : (fend - sstart + 1),
-        					"content" : sstart + "-" + fend
-        			};
-        			newlist[count] = change;
-        			count++;
-        			i++;
-        			newLength += change.length;
-        		} else if (fstart < send){
-        			var change = {
-        					"type" : 1,
-        					"length" : (send - fstart + 1),
-        					"content" : fstart + "-" + send
-        			};
-        			newlist[count] = change;
-        			count++;
-        			j++;
-        			newLength += change.length;
-        		}
-        	}
-        	
-        	changeset = {
-        			"oldLength" : oldLength,
-        			"newLength" : newLength,
-        			"changeList" : newlist
-        	};
-        	return changeset;
-        }*/
+
         
         
         
@@ -1060,7 +960,38 @@
         }
         
         
-        function updateCursorPosition(changeSet, curPos) {
+        function updateCursorPosition(changeSet) {
+        	var add = 0;
+        	var minus = 0;
+        	var last = 0;
+        	var curPos = $('#coeditor').getSelectionStart();
+        	alert("curPos:" + curPos);
+        	var list = changeSet.changeList;
+        	var l = parseInt(list.length);
+        	var i = 0;
+        	while(i < l && last < curPos){
+        		var change = list[i];
+        		if(change.type == 0){		
+        			add += change.length;
+        		} else {
+        			var begin, end;
+        			if(change.length == 1){
+        				begin = end = parseInt(change.content);
+        			}
+        			else{
+        				var tmp = change.content.split("-");
+        				begin = parseInt(tmp[0]);
+        				end = parseInt(tmp[1]);
+        			}
+        			if(begin > last){
+        				minus += (begin-last);
+        			}
+        			last = (end + 1);
+        		}
+        		++i;
+        	}
         	
+        	alert("newPos:" + (curPos + add - minus));
+        	return (curPos + add - minus);
         }
         
