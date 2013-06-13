@@ -162,36 +162,45 @@ public class ChangeSet {
 		ArrayList<SingleChange> followSet = new ArrayList<SingleChange> ();
 		
 		int commonLength = Math.min(unzippedA.length, unzippedB.length);
-		for (int i = 0; i < commonLength; i++) {
+		int i = 0;
+		int j = 0;
+		while (i < unzippedA.length && j < unzippedB.length) {
 			SingleChange lhs = unzippedA[i];
-			SingleChange rhs = unzippedB[i];
+			SingleChange rhs = unzippedB[j];
 			
-			if (lhs.type == Change.NEW && rhs.type == Change.NEW) {
-				if (lhs.c > rhs.c) {
-					followSet.add(rhs);
-					followSet.add(new SingleChange(i));
-				} else {
-					followSet.add(new SingleChange(i));
-					followSet.add(rhs);
-				}
-			} else if (lhs.type == Change.NEW && rhs.type == Change.OLD) {
+			
+			
+			if (lhs.type == Change.NEW) {
 				followSet.add(new SingleChange(i));
-			} else if (lhs.type == Change.OLD && rhs.type == Change.NEW) {
-				followSet.add(rhs);
-			} else {
-				if (lhs.pos == rhs.pos) {
-					followSet.add(lhs);
+				i++;
+			} else if (lhs.type == Change.OLD) {
+				if (rhs.type == Change.NEW) {
+				  followSet.add(new SingleChange(rhs.c));
+					j++;
+				} else {
+					if (lhs.pos == rhs.pos) {
+						followSet.add(new SingleChange(lhs.pos));
+						i++;j++;
+					} else if (lhs.pos < rhs.pos) {
+						i++;
+					} else {
+						j++;
+					}
 				}
 			}
 		}
-
-		for (int i = commonLength; i < unzippedA.length; i++)
+		
+		while (i < unzippedA.length) {
 			if (unzippedA[i].type == Change.NEW)
 				followSet.add(new SingleChange(i));
+			i++;
+		}
 		
-		for (int i = commonLength; i < unzippedB.length; i++)
-			if (unzippedB[i].type == Change.NEW)
-				followSet.add(unzippedB[i]);
+		while (j < unzippedB.length) {
+			if (unzippedB[j].type == Change.NEW)
+				followSet.add(unzippedB[j]);
+			j++;
+		}
 		
 		int followsOldLength = a.newLength;
 		int followsNewLength = followSet.size();
