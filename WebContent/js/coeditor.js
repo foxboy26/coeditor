@@ -190,8 +190,9 @@
         				newText += oldText.charAt(parseInt(change.content));
         			}
         			else{
-        				var begin = parseInt(change.content[0]);
-        				var end = parseInt(change.content[2]) + 1;
+        				var tmp = change.content.split("-");
+        				var begin = parseInt(tmp[0]);
+        				var end = parseInt(tmp[1]) + 1;
         				newText += oldText.substring(begin, end);
         			}
         		}
