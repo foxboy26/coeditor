@@ -198,7 +198,7 @@ public class ChangeSet {
 		
 		while (j < unzippedB.length) {
 			if (unzippedB[j].type == Change.NEW)
-				followSet.add(unzippedB[j]);
+				followSet.add(new SingleChange(unzippedB[j].c));
 			j++;
 		}
 		
