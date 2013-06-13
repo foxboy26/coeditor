@@ -245,7 +245,7 @@
 
           Coeditor.socket.send(jmessage); 				            				          				            
 
-          /*setInterval(
+          setInterval(
             function() {
               getActiveUsers(docId);
             },
@@ -257,7 +257,7 @@
               saveDocument(docId);
             }, 
             60000
-          );*/
+          );
           
           $('#coeditor').setCaretPosition(3);
         }
