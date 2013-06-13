@@ -70,31 +70,30 @@
 	</div>
 	<div class="container-fluid">
 		<div class="row-fluid">
-			<form action="coeditor.jsp" method="get">
+      <!--doc title -->
+      <div class="span3 offset2">
+        <div class="span1" id="title">
+          <label class="control-label">Title</label>
+        </div>
+        <div class="span9 offset1">
+          <input type="text" value="" name="title" autofocus="autofocus" placeholder="New document">
+        </div>
+      </div>
 
-				<!--doc title -->
-				<div class="span5 offset2">
-					<div class="row-fluid">
-						<div class="span1" id="username">
-							<label class="control-label">Title</label>
-						</div>
-						<div class="span11">
-							<input type="text" value="" name="title" autofocus="autofocus" placeholder="New document">
-						</div>
-					</div>
-				</div>
+      <div class="span3" id="info">
+      </div>
 
-				<!--buttons -->
-				<div class="span3">
-					<div class="span3 offset6">
-						<input type="button" class="btn btn-primary" name="create" value="create" onclick="createDocument()">
-					</div>
-					<div class="span3">
-						<input type="button" class="btn" name="share" value="share" onsubmit="">
-					</div>
-				</div>
-			</form>
+      <!--buttons -->
+      <div class="span2">
+        <div class="span2">
+          <input type="button" class="btn btn-primary" name="create" value="create" onclick="createDocument()">
+        </div>
+        <div class="span2 offset3">
+          <input type="button" class="btn" name="share" value="share" onsubmit="">
+        </div>
+      </div>
 		</div>
+
 		<div class="row-fluid">
 			<!--editable filelist -->
 			<div class="span2">
@@ -107,11 +106,15 @@
       					int id = rs.getInt("id");
       					//System.out.println(file);
       			%>
-            <li><a href="#" name="file" onclick="openDocument(<%= file %>)"><%= file %></a></li>
+            <li id="<%= file %>">
+              <a href="#" onclick="openDocument('<%= file %>')">
+	              <%= file %>
+              </a>
+              <i class="icon-trash" onclick="deleteDocument('<%= file %>')"></i>
+            </li>
 						<%
       				}
 				%>
-						<!-- <li class="divider"></li> -->
 					</ul>
 				</div>
 			</div>

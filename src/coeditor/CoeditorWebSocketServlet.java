@@ -125,6 +125,13 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           
           sendErrorMessage(action + " is not supported");
         
+        } else if (action != null && action.equals("delete")) {
+          String docId = msg.content;
+
+          System.out.println("hhahaa");
+          
+        	deleteDocument(docId);
+        	
         } else if (action != null && action.equals("newChange")) {
          
           ChangeSet newChange = gson.fromJson(msg.content, ChangeSet.class);
@@ -141,18 +148,41 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           
           document.addRevisionRecord(clientId, newChangePrime);
 
-        } else {
-
+        } else if (action != null && action.equals("getActiveUsers")) {
+        	String docId = msg.content;
+        	System.out.println(getActiveUsers(docId));
+        	Message response = new Message("server", "activeUsers", getActiveUsers(docId));
+        	sendMessage(gson.toJson(response));
+        }
+      	else {
           System.out.println("[new message] error: no action");
           sendErrorMessage(action + " is not supported");
         }
       }
 
+      private String getActiveUsers(String docId) {
+      	if (document.docId.equals(docId)) {
+	      	boolean first = true;
+	      	String result = "[";
+	      	for (Client c : document.activeUsers.values()) {
+	      		if (first)
+	      			first = false;
+	      		else
+	      			result += ",";
+	      		result = result + "\"" + c.clientId + "\"";
+	      	}
+	      	result += "]";
+	      	
+	      	return result;
+      	}
+      	else return "[]";
+      }
+      
       private boolean openDocument(String docId, String clientId) {
 
         if (!documents.containsKey(docId)) {
-          documents.put(docId, this.document);
           document = new Document(docId, s3);
+          documents.put(docId, this.document);
         }
         else {
           document = documents.get(docId);
@@ -176,6 +206,18 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
       private boolean saveDocument() {
         this.document.save();
         return true;
+      }
+      
+      private boolean deleteDocument(String docId) {
+      	
+      	if (document != null && document.docId.equals(docId))
+      		closeDocument();
+      	
+      	System.out.println("delete");
+      	
+      	s3.deleteKey(docId);
+      	
+      	return true;
       }
 
       private boolean createDocument(String docId, String clientId) {

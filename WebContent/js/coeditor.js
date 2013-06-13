@@ -20,27 +20,6 @@
             Coeditor.socket.onopen = function () {
                 Console.log('Info: WebSocket connection opened.');
                 
-                
-                //open doc
-                var doc = $("li[name = file]");
-                var length = doc.length;
-               
-                if(length != 0){
-                	for(var i = 0; i < length; ++i){
-                		doc[i].onclick = function(event) { 
-		                	var message = {
-			        			clientId: $('#userid').val(),
-			        			action: "open",
-			        			contentType: 0,
-			        			content: this.text      			
-		                	};
-				        	var jmessage = JSON.stringify(message);
-				            Coeditor.socket.send(jmessage); 				            				          				            
-				            getUserList(this);
-		                };
-                	}
-                };
-                
                 $('#coeditor').keypress(function(event) {
                 	
                 	var changeSet = computeChangeSet(event);
@@ -74,13 +53,15 @@
             	message = message.data;
             	message = JSON.parse(message);
             	var action = message.action;
-            	if(action == "response")
+            	var clientId = message.clientId;
+            	if(action == "response" && clientId == "server")
             		Textarea.update(message.content);
-            	else{
-            		
+            	else if (action == "activeUsers" && clientId == "server"){
+            		var activeUsers = JSON.parse(message.content);
+            		for (var i = 0; i < activeUsers.length; i++) {
+            			updateUserStatus(activeUsers[i], 'online');
+            		}
             	}
-            	
-                
             };
         });
 
@@ -127,8 +108,8 @@
         		}
         	}
         	alert("newtext:" + newText);
-        	oldLength = newText.length();
-        	$('#coeditor').value = newText;
+        	oldLength = newText.length;
+        	$('#coeditor')[0].value = newText;
         };
         
         var Console = {};
@@ -139,10 +120,6 @@
             p.style.wordWrap = 'break-word';
             p.innerHTML = message;
             console.append(p);
-            while (console.children().length > 25) {
-                console.removeChild(console.firstChild);
-            }
-            console.scrollTop = console.scrollHeight;
         });
 
         Coeditor.initialize();
@@ -150,7 +127,12 @@
         
 
         function openDocument(docId) {
+          
+          getUserList(docId);
 
+          $('#' + docId).addClass('active');
+
+          /* send open request */
           var message = {
             clientId: $('#userid').val(),
             action: "open",
@@ -163,9 +145,36 @@
 
           Coeditor.socket.send(jmessage); 				            				          				            
 
-          getUserList(docId);
+          setInterval(
+            function() {
+              getActiveUsers(docId);
+            },
+            2000
+          );
+          
+          setInterval(
+            function() { 
+              saveDocument(docId);
+            }, 
+            60000
+          );
         }
 
+        function getActiveUsers(docName) {
+        	var message = {
+                    clientId: $('#userid').val(),
+                    action: "getActiveUsers",
+                    content: docName      			
+                  };
+
+                  var jmessage = JSON.stringify(message);
+
+                  Console.log('Info: [getActiveUsers request]' + jmessage);
+
+                  Coeditor.socket.send(jmessage); 				 
+        }
+        
+        
         function createDocument() {
           var docName = $('input[name=title]').val()
           var userId = $('input[name=userid]').val()
@@ -196,25 +205,74 @@
           );
         }
 
+        function saveDocument(docId) {
+          var message = {
+            clientId: $('#userid').val(),
+            action: "save",
+            content: docId      			
+          };
+
+          var jmessage = JSON.stringify(message);
+
+          Console.log('Info: [save request]' + jmessage);
+
+          //Coeditor.socket.send(jmessage); 				            				          				            
+          
+          $('#info').text('Last time saved at ' + new Date().toTimeString());
+        }
+
+        function deleteDocument(docName) {
+        	alert(docName);
+        	$.getJSON('deleteDocument.jsp?docName=' + docName, function(data) {
+        		if (data == 'success') {
+            	var message = {
+        				clientId : $('#userid').val(),
+        				action : "delete",
+        				content : docName
+        			};
+        		
+        			var jmessage = JSON.stringify(message);
+        		
+        			Console.log('Info: [delete request]' + jmessage);
+        			
+        			Coeditor.socket.send(jmessage);
+        			
+        			$('#' + docName).remove();
+        		}
+            });
+		}
+        
+        
         function updateFileList(docId) {
           var newli = document.createElement("li");  // Create with DOM
-          newli.innerHTML= '<a href="#" name="file" onclick="openDocument("' + docId + '">' + docId  +'</a>'
+          newli.innerHTML= '<a href="#" id="' + docId + '" onclick="openDocument("' + docId + '">' + docId  +'</a>'
           $('#filelist').append(newli);
+          $('#' + docId).addClass('active');
         }
         
         function getUserList(docName){
-        	  $.getJSON('userlist.jsp?docName=' + docName, function(data) {
-        	    $('#userlist').empty();
-        	    var head = "<li class='nav-header'>Userlist</li>";
-        	    $('#userlist').append(head);
-        	    
-        	    for (var i = 0; i < data.length; i++) {
-        	      var newli = document.createElement("li");  // Create with DOM
-        	      newli.innerHTML= data[i].username;
-        	      $('#userlist').append(newli);
-        	    }
-        	  });
-        	}
+          $.getJSON('userlist.jsp?docName=' + docName, function(data) {
+            $('#userlist').empty();
+            var head = "<li class='nav-header'>Userlist</li>";
+            $('#userlist').append(head);
+            
+            for (var i = 0; i < data.length; i++) {
+              var newli = document.createElement("li");  // Create with DOM
+              newli.setAttribute("id",data[i].userid);
+              newli.innerHTML= "<span class=\"label\">" + data[i].username + "</span>";
+              $('#userlist').append(newli);
+            }
+            
+          });
+        }
+
+        function updateUserStatus(clientId, state) {
+          if (state == 'online') {
+        	  $('#' + clientId + ' span').removeClass().addClass('label label-success');
+          } else {
+        	  $('#' + clientId + ' span').removeClass('label-success');
+          }
+        }
         
         function computeChangeSet(event){
         	//TODO: keycode
@@ -509,19 +567,3 @@
         		return pos;
         	}
         }
-
-
-  
- 
-
-
-
-
-
-
-
-
-
-
-
-

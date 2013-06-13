@@ -20,31 +20,27 @@
 	    Class.forName(Config.jdbcDriver);
 	    
 	  conn = DriverManager.getConnection(Config.connectionURL, Config.username, Config.password);
-		pstmt = conn.prepareStatement("select users.username from filelist, share, users where filelist.name = ? and share.file = filelist.id and share.user = users.id");
+		pstmt = conn.prepareStatement("select users.id, users.username from filelist, share, users where filelist.name = ? and share.file = filelist.id and share.user = users.id");
 		pstmt.setString(1, docName);
 		rs = pstmt.executeQuery();
 		
-		ArrayList<String> userlist = new ArrayList<String>();
-		while(rs.next()){
-			userlist.add(rs.getString("username"));
-		}
 		
-      	out.println("[");
-      	boolean first = true;
-     	for(String name: userlist) {
-        	if (first)
-          		first = false;
-        	else
-          		out.println(",");
-        	out.print("{\"username\" : \"" + name + "\"}");
-      	}
-      	out.println("\n]");
+    out.println("[");
+    boolean first = true;
+		while(rs.next()){
+      if (first)
+        first = false;
+      else
+        out.println(",");
+      out.print("{\"userid\":" + rs.getString("users.id") + ", \"username\":\"" + rs.getString("users.username") + "\"}");
+		}
+    out.println("\n]");
 
-      	rs.close();
+    rs.close();
 
-      	pstmt.close();
+    pstmt.close();
 
-      	conn.close();
+    conn.close();
 %>
 <%-- -------- Close Connection Code -------- --%>
 <%
