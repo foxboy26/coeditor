@@ -144,6 +144,7 @@
             	} else if (action == "ACK" && clientId == "server"){
             		Console.log("ACK received");
             		A = combine(A, X);
+            		revisionNum = message.revisionNumber;
             		if (Y != null) {
 	            		var newmessage = {
 	                			"clientId": $('#userid').val(),
@@ -258,7 +259,7 @@
 
           Coeditor.socket.send(jmessage); 				            				          				            
 
-          setInterval(
+          /*setInterval(
             function() {
               getActiveUsers(docId);
             },
@@ -270,9 +271,7 @@
               saveDocument(docId);
             }, 
             60000
-          );
-          
-          $('#coeditor').setCaretPosition(3);
+          );*/
         }
 
         function getActiveUsers(docName) {

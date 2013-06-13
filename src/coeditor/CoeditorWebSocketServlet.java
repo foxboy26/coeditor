@@ -142,21 +142,22 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           Client client = document.activeUsers.get(connectionId);
           
           System.out.println("[" + client.clientId + "] newChange: " + newChange);
-          System.out.println("[" + client.clientId + "] latestVersion: " + client.latestVersion);
+          System.out.println("[" + client.clientId + "] latestVersion: " + msg.revisionNumber);
       		System.out.println("[" + document.docId + "] headRevision: " + document.headRevision);
-          ChangeSet newChangePrime = this.document.applyChangeSet(newChange, client.latestVersion);
+          ChangeSet newChangePrime = this.document.applyChangeSet(newChange, msg.revisionNumber);
           
           System.out.println("[" + client.clientId + "] C': " + newChangePrime);
-          
-          Message syncMsg = new Message("server", "sync", gson.toJson(newChangePrime));
-          broadcast(gson.toJson(syncMsg));
-          
-          Message ackMsg = new Message("server", "ACK", "ACK");
-          sendMessage(gson.toJson(ackMsg));
-          
+
           document.addRevisionRecord(clientId, newChangePrime);
           
-          document.updateClientVersion();
+          Message syncMsg = new Message("server", "sync", gson.toJson(newChangePrime), document.headRevision);
+          broadcast(gson.toJson(syncMsg));
+          
+          Message ackMsg = new Message("server", "ACK", "ACK", document.headRevision);
+          sendMessage(gson.toJson(ackMsg));
+          
+          
+          //document.updateClientVersion();
           
       		System.out.println("[" + document.docId + "] headRevision: " + document.headRevision);
       		System.out.println("[" + document.docId + "] revisionList: " + document.revisionList);
