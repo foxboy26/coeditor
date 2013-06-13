@@ -130,7 +130,9 @@
           
           getUserList(docId);
 
-          $('#' + docId).addClass('active');
+          //$('#' + docId).addClass('active');
+          
+          $('#title').text(docId);
 
           /* send open request */
           var message = {
@@ -145,7 +147,7 @@
 
           Coeditor.socket.send(jmessage); 				            				          				            
 
-          setInterval(
+          /*setInterval(
             function() {
               getActiveUsers(docId);
             },
@@ -157,7 +159,7 @@
               saveDocument(docId);
             }, 
             60000
-          );
+          );*/
         }
 
         function getActiveUsers(docName) {
@@ -242,7 +244,18 @@
             });
 		}
         
-        
+        function shareDocument() {
+        	
+        	var userName = $('input[name=shareUserName]').val();
+        	var docName = $('#title').text();
+        	$.getJSON('shareDocument.jsp?docName=' + docName + '&userName=' + userName, function(data) {
+        		if (data == 'success') {
+        			alert('Successfully added ' + userName + ' to coeditor!');
+                	
+                	getUserList(docName);
+        		}
+            });
+        }        
         function updateFileList(docId) {
           var newli = document.createElement("li");  // Create with DOM
           newli.innerHTML= '<a href="#" id="' + docId + '" onclick="openDocument("' + docId + '">' + docId  +'</a>'

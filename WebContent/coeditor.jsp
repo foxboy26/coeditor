@@ -66,18 +66,13 @@
 %>
 	<div>
     <input type="hidden" name="userid" value=<%=userid%> id="userid" />
-    <input type="hidden" value=<%=docid%> id="docid" />
+    <input type="hidden" name="docid" value=<%=docid%> id="docid" />
 	</div>
 	<div class="container-fluid">
 		<div class="row-fluid">
       <!--doc title -->
       <div class="span3 offset2">
-        <div class="span1" id="title">
-          <label class="control-label">Title</label>
-        </div>
-        <div class="span9 offset1">
-          <input type="text" value="" name="title" autofocus="autofocus" placeholder="New document">
-        </div>
+          <h4 id="title">Title</h4>
       </div>
 
       <div class="span3" id="info">
@@ -86,10 +81,10 @@
       <!--buttons -->
       <div class="span2">
         <div class="span2">
-          <input type="button" class="btn btn-primary" name="create" value="create" onclick="createDocument()">
+          <a href="#createDialog" role="button" class="btn btn-primary" data-toggle="modal">Create</a>
         </div>
         <div class="span2 offset3">
-          <input type="button" class="btn" name="share" value="share" onsubmit="">
+          <a href="#shareDialog" role="button" class="btn" data-toggle="modal">Share</a>
         </div>
       </div>
 		</div>
@@ -139,6 +134,36 @@
 			</div>
 		</div>
 	</div>
+
+
+<div id="shareDialog" class="modal hide fade">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    <h3>Share with</h3>
+  </div>
+  <div class="modal-body">
+    <input type="text" value="" name="shareUserName" autofocus="autofocus" placeholder="editor">
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    <a href="#" class="btn btn-primary" data-dismiss="modal" aria-hidden="true" onclick="shareDocument()">Share</a>
+  </div>
+</div>
+
+<div id="createDialog" class="modal hide fade">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    <h3>Create a new document</h3>
+  </div>
+  <div class="modal-body">
+    <input type="text" value="" name="title" autofocus="autofocus" placeholder="Untitled document">
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    <a href="#" class="btn btn-primary" data-dismiss="modal" aria-hidden="true" onclick="createDocument()">Create</a>
+  </div>
+</div>
+
 
 	<%-- -------- Close Connection Code -------- --%>
 	<%
