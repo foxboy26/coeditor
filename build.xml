@@ -126,17 +126,18 @@
 
 -->
 
-  <property name="app.name"      value="myapp"/>
+  <property name="app.name"      value="coeditor"/>
   <property name="app.path"      value="/${app.name}"/>
   <property name="app.version"   value="0.1-dev"/>
   <property name="build.home"    value="${basedir}/build"/>
-  <property name="catalina.home" value="../../../.."/> <!-- UPDATE THIS! -->
+  <property name="catalina.home" value="/home/apache-tomcat-7.0.41"/> <!-- UPDATE THIS! -->
   <property name="dist.home"     value="${basedir}/dist"/>
   <property name="docs.home"     value="${basedir}/docs"/>
   <property name="manager.url"   value="http://localhost:8080/manager/text"/>
   <property name="src.home"      value="${basedir}/src"/>
   <property name="web.home"      value="${basedir}/web"/>
-
+  <property name="manager.username" value="tomcat"/>
+  <property name="manager.password" value="tomcat"/>
 
 <!-- ==================== External Dependencies =========================== -->
 
@@ -193,7 +194,9 @@
     <fileset dir="${catalina.home}/lib">
       <include name="*.jar"/>
     </fileset>
-
+    <fileset dir="./web/WEB-INF/lib">
+    <include name="*.jar"/>
+    </fileset>
   </path>
 
 
@@ -417,8 +420,8 @@
    description="List installed applications on servlet container">
 
     <list    url="${manager.url}"
-        username="${manager.username}"
-        password="${manager.password}"/>
+        username="tomcat"
+        password="tomcat"/>
 
   </target>
 
