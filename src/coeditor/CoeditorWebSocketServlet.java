@@ -104,7 +104,7 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
             System.out.println("Headtext: " + headText);
             ChangeSet testChangeSet = new ChangeSet(headText);
 
-            Message response = new Message("server", "response", gson.toJson(testChangeSet));
+            Message response = new Message("server", "open", gson.toJson(testChangeSet));
             sendMessage(gson.toJson(response));
 
           } else {
@@ -117,13 +117,15 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           
           closeDocument();
           
-          sendErrorMessage(action + " is not supported");
+          Message response = new Message("server", "close", "close");
+          sendMessage(gson.toJson(response));
         
         } else if (action != null && action.equals("save")) {
           
           saveDocument();
           
-          sendErrorMessage(action + " is not supported");
+          Message response = new Message("server", "save", "");
+          sendMessage(gson.toJson(response));
         
         } else if (action != null && action.equals("delete")) {
           String docId = msg.content;
