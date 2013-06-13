@@ -250,7 +250,7 @@
 
           Coeditor.socket.send(jmessage); 				            				          				            
 
-          /*setInterval(
+          setInterval(
             function() {
               getActiveUsers(docId);
             },
@@ -262,7 +262,7 @@
               saveDocument(docId);
             }, 
             60000
-          );*/
+          );
           
           $('#coeditor').setCaretPosition(3);
         }
@@ -965,7 +965,7 @@
         	var minus = 0;
         	var last = 0;
         	var curPos = $('#coeditor').getSelectionStart();
-        	alert("curPos:" + curPos);
+        	//alert("curPos:" + curPos);
         	var list = changeSet.changeList;
         	var l = parseInt(list.length);
         	var i = 0;
@@ -991,7 +991,7 @@
         		++i;
         	}
         	
-        	alert("newPos:" + (curPos + add - minus));
+        	//alert("newPos:" + (curPos + add - minus));
         	return (curPos + add - minus);
         }
         
