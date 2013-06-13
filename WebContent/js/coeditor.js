@@ -187,6 +187,9 @@
         	alert("newtext:" + newText);
         	oldLength = newText.length;
         	$('#coeditor')[0].value = newText;
+        	
+        	
+            $('#coeditor').setCaretPosition(3);
         };
         
         var Console = {};
@@ -237,6 +240,8 @@
             }, 
             60000
           );*/
+          
+          $('#coeditor').setCaretPosition(3);
         }
 
         function getActiveUsers(docName) {
@@ -978,3 +983,29 @@
         		return pos;
         	}
         };
+        
+        $.fn.setCaretPosition = function(caretPos) {
+
+        	var elem = this[0];
+            if(elem != null) {
+                if(elem.createTextRange) {
+                    var range = elem.createTextRange();
+                    range.move('character', caretPos);
+                    range.select();
+                }
+                else {
+                    if(elem.selectionStart) {
+                    	elem.focus();
+                    	elem.setSelectionRange(caretPos, caretPos);
+                    }
+                    else
+                    	elem.focus();
+                }
+            }
+        }
+        
+        
+        function updateCursorPosition(changeSet, curPos) {
+        	
+        }
+        
