@@ -1,6 +1,7 @@
 	var A = null;
 	var X = null;
 	var Y = null;
+	var revisionNum = 0;
 
 
 	var Coeditor = {};
@@ -108,12 +109,16 @@
             	var action = message.action;
             	var clientId = message.clientId;
             	if(action == "sync" && clientId == "server"){
-            		//TODO:
+            		
+            		
+            		
             		var B = JSON.parse(message.content);
             		Console.log('B ' + JSON.stringify(B));
             		
             		var Aprime = combine(A, B);
             		Console.log('Aprime ' + JSON.stringify(Aprime));
+            		
+            		revisionNum = message.revisionNumber;
             		
             		var Xprime = follow(B, X);
             		Console.log('Xprime ' + JSON.stringify(Xprime));
@@ -129,6 +134,7 @@
             		Y = Yprime;
             		
             		Textarea.update(D);
+            		
             	}
             	else if (action == "activeUsers" && clientId == "server"){
             		var activeUsers = JSON.parse(message.content);
@@ -142,8 +148,9 @@
 	            		var newmessage = {
 	                			"clientId": $('#userid').val(),
 	                			"action" : "newChange",
-	                			"content": JSON.stringify(Y)
-	                	};
+	                			"content": JSON.stringify(Y),
+	                			 "revisionNumber" : revisionNum
+ 	                	};
 	                               
 			            Coeditor.socket.send(JSON.stringify(newmessage));
             		}
@@ -239,9 +246,10 @@
 
           /* send open request */
           var message = {
-            clientId: $('#userid').val(),
-            action: "open",
-            content: docId      			
+            "clientId": $('#userid').val(),
+            "action": "open",
+            "content": docId,
+            "revisionNumber" : revisionNum
           };
 
           var jmessage = JSON.stringify(message);
@@ -271,7 +279,8 @@
         	var message = {
                     clientId: $('#userid').val(),
                     action: "getActiveUsers",
-                    content: docName      			
+                    content: docName,    
+                    "revisionNumber" : revisionNum
                   };
 
                   var jmessage = JSON.stringify(message);
@@ -295,7 +304,8 @@
                 var message = {
                   clientId: $('#userid').val(),
                   action: "create",
-                  content: docName      			
+                  content: docName,
+                  "revisionNumber" : revisionNum
                 };
 
                 var jmessage = JSON.stringify(message);
@@ -337,7 +347,8 @@
             	var message = {
         				clientId : $('#userid').val(),
         				action : "delete",
-        				content : docName
+        				content : docName,
+        				"revisionNumber" : revisionNum
         			};
         		
         			var jmessage = JSON.stringify(message);
@@ -368,7 +379,8 @@
         	var message = {
     				clientId : $('#userid').val(),
     				action : "close",
-    				content : docId
+    				content : docId,
+    				"revisionNumber" : revisionNum
     			};
     		
     			var jmessage = JSON.stringify(message);
@@ -480,7 +492,8 @@
         		var newmessage = {
             			"clientId": $('#userid').val(),
             			"action" : "newChange",
-            			"content": JSON.stringify(Y)
+            			"content": JSON.stringify(Y),
+            			"revisionNumber" : revisionNum
             	};
                            
 	            Coeditor.socket.send(JSON.stringify(newmessage));  
@@ -713,7 +726,8 @@
 	        		var newmessage = {
 	            			"clientId": $('#userid').val(),
 	            			"action" : "newChange",
-	            			"content": JSON.stringify(Y)
+	            			"content": JSON.stringify(Y),
+	            			"revisionNumber" : revisionNum
 	            	};
 	                           
 		            Coeditor.socket.send(JSON.stringify(newmessage));  
