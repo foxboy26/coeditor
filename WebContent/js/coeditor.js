@@ -246,7 +246,7 @@
 
           Coeditor.socket.send(jmessage); 				            				          				            
 
-          setInterval(
+          /*setInterval(
             function() {
               getActiveUsers(docId);
             },
@@ -258,7 +258,7 @@
               saveDocument(docId);
             }, 
             60000
-          );
+          );*/
           
           $('#coeditor').setCaretPosition(3);
         }
@@ -409,6 +409,9 @@
         	//TODO: keycode
         	var keycode = (event.keyCode ? event.keyCode : event.which);
         	var value = String.fromCharCode(keycode);
+        	if(keycode == 13){
+        		value = "\n";
+        	}
         	var oldLength = $('#coeditor').val().length;
         	var cursorPosition = $('#coeditor').getSelectionStart();	
         		
