@@ -213,6 +213,23 @@ public class ChangeSet {
 		return new ChangeSet(a.oldLength, b.newLength, compositionSet);
 	}
 	
+	public String applyTo(String document) {
+		
+		String newDoc = "";
+		
+		for (Change c : this.changeList) {
+			if (c.type == Change.NEW) {
+				newDoc = newDoc + c.content;
+			} else {
+				String[] range = c.content.split("-");
+				int begin = Integer.parseInt(range[0]);
+				newDoc = newDoc + document.substring(begin, begin + c.length);
+			}
+		}
+		
+		return newDoc;
+	}
+	
 	public String toString() {
 		String out = "";
 		out = "(" + this.oldLength + " -> " + this.newLength + ") " + 
@@ -262,5 +279,9 @@ public class ChangeSet {
 		ChangeSet headChange = new ChangeSet("hah");
 		System.out.println(headChange);
 		
+		
+		String headText = "baseball";
+		System.out.println(a.applyTo(headText));
+		System.out.println(b.applyTo(headText));
 	}
 }

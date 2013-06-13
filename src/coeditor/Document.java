@@ -12,6 +12,7 @@ public class Document {
 	String headText;
 	String docId;
 	int headRevision;
+	int committedRevision;
 	ArrayList<RevisionRecord> revisionList;
 	Map<Integer, Client> activeUsers;
 	boolean isOpen;
@@ -23,6 +24,7 @@ public class Document {
 		this.revisionList = new ArrayList<RevisionRecord> ();
 		this.activeUsers = new Hashtable<Integer, Client> ();
 		this.headRevision = -1;
+		this.committedRevision = 0;
 	}
 	
 	public void open(int connectionId, String clientId) {
@@ -54,7 +56,12 @@ public class Document {
 		
 		updateHeadtext();
 		
-		storage.put(docId, headText);
+		try {
+	    storage.putDocument(docId, headText);
+    } catch (IOException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+    }
 	}
 	
 	public void close(int connectionId) {
@@ -92,8 +99,13 @@ public class Document {
 		this.revisionList.add(new RevisionRecord(clientId, headRevision, cs));
 	}
 	
-	public void updateHeadtext() {
-		
+	private void updateHeadtext() {
+		int length = revisionList.size();
+		for (int i = committedRevision; i < committedRevision + 10 && i < length; i++) {
+			System.out.println("headText: " + headText);
+			headText = revisionList.get(i).changeSet.applyTo(headText);
+		}
+		committedRevision = Math.min(committedRevision + 10, revisionList.size());
 	}
 	
 	public void addUser(Integer clientId, Client user) {
@@ -106,5 +118,41 @@ public class Document {
 	
 	public Set<Integer> getActiveUser() {
 		return this.activeUsers.keySet();
+	}
+	
+	public static void main(String[] args) {
+		KeyValueStore s3 = new KeyValueStore();
+		Document doc = new Document("test_doc", s3);
+		//doc.create(1, "xxx");
+		doc.open(1, "xxx");
+		/*ChangeSet init = new ChangeSet(0, 8);
+		ChangeSet a = new ChangeSet(8, 5);
+		ChangeSet b = new ChangeSet(8, 5);
+		
+		init.addChange(new Change("baseball"));
+		
+		a.addChange(new Change(0, 1));
+		a.addChange(new Change("si"));
+		a.addChange(new Change(7));
+		
+		b.addChange(new Change(0));
+		b.addChange(new Change("e"));
+		b.addChange(new Change(6));
+		b.addChange(new Change("ow"));
+		
+		
+		doc.addRevisionRecord("xxx", init);
+		doc.addRevisionRecord("xxx", a);
+		//doc.addRevisionRecord("xxx", b);*/
+		System.out.println(doc.headText);
+		System.out.println(doc.docId);
+		doc.save();
+		System.out.println(doc.headText);
+		System.out.println(doc.committedRevision);
+		
+		System.out.println(doc.isOpen);
+		System.out.println(doc.revisionList);
+		System.out.println(doc.activeUsers);
+	  //s3.deleteKey("test_doc");
 	}
 }

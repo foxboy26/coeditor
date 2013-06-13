@@ -199,9 +199,11 @@
 
                 Coeditor.socket.send(jmessage); 				            				          				            
 
-                getUserList(docName);
+                //getUserList(docName);
 
                 updateFileList(docName);
+                
+                openDocument(docName);
               }
             }
           );

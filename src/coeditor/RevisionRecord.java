@@ -17,4 +17,10 @@ public class RevisionRecord {
 		this.version = version;
 		this.changeSet = changeSet;
 	}
+	
+	public String toString() {
+		String out = "";
+		out = "clientId: " + clientId + " version: " + version + " changeSet" + changeSet.toString();
+	  return out;
+	}
 }
