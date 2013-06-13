@@ -158,10 +158,6 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           
           
           //document.updateClientVersion();
-          
-      		System.out.println("[" + document.docId + "] headRevision: " + document.headRevision);
-      		System.out.println("[" + document.docId + "] revisionList: " + document.revisionList);
-      		System.out.println("[" + client.clientId + "] latestVersion: " + client.latestVersion);
         } else if (action != null && action.equals("getActiveUsers")) {
         	String docId = msg.content;
         	System.out.println(getActiveUsers(docId));
