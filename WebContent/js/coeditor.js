@@ -1,5 +1,5 @@
-	var A;
-	var X;
+	var A = null;
+	var X = null;
 	var Y = null;
 
 
@@ -19,25 +19,68 @@
 
             Coeditor.socket.onopen = function () {
                 Console.log('Info: WebSocket connection opened.');
+                /*var list1 = new Array();
+                list1[0] = {
+                		"type" : 1,
+                		"length" : 2,
+                		"content" : "0-1"
+                };
+                
+                list1[1] = {
+                		"type" : 0,
+                		"length" : 2,
+                		"content" : "si"
+                };
+                
+                list1[2] = {
+                		"type" : 1,
+                		"length" : 1,
+                		"content" : "7"
+                };
+                
+                var a = {
+                		"oldLength" : 8,
+                		"newLength" : 5,
+                		"changeList" : list1
+                };
+                
+                var list2 = new Array();
+                list2[0] = {
+                		"type" : 1,
+                		"length" : 1,
+                		"content" : "0"
+                };
+                
+                list2[1] = {
+                		"type" : 0,
+                		"length" : 1,
+                		"content" : "e"
+                };
+                
+                list2[2] = {
+                		"type" : 1,
+                		"length" : 1,
+                		"content" : "6"
+                };
+                list2[3] = {
+                		"type" : 0,
+                		"length" : 2,
+                		"content" : "ow"
+                };
+                var b = {
+                		"oldLength" : 8,
+                		"newLength" : 5,
+                		"changeList" : list2
+                };
+                
+                var test = follow(a,b);*/
+                
+                Console.log(JSON.stringify(test));
                 
                 $('#coeditor').keypress(function(event) {
                 	
-                	var changeSet = computeChangeSet(event);
+                	computeChangeSet(event);
                 	
-                	/*var changeset = {
-                			"oldLength" : oldLength,
-                			"newLength": oldLength + 1,
-                			"changeList": Y
-                	};
-                	
-                	
-                	var message = {
-                			"clientid": $('#userid').val(),
-                			"action" : "newChange",
-                			"content": JSON.stringify(changeset)
-                	};*/
-                               
-		            //Coeditor.socket.send(message);  
                 });      
                 
                 $('#coeditor').keydown(function(event) {
@@ -62,13 +105,37 @@
             	message = JSON.parse(message);
             	var action = message.action;
             	var clientId = message.clientId;
-            	if(action == "response" && clientId == "server")
-            		Textarea.update(message.content);
+            	if(action == "sync" && clientId == "server"){
+            		//TODO:
+            		var B = JSON.parse(message.content);
+            		var Aprime = combine(A, B);
+            		var Xprime = follow(B, X);
+            		var Yprime = follow(follow(X,B), Y);
+            		var D = follow(Y, follow(X,B));
+            		A = Aprime;
+            		X = Xprime;
+            		Y = Yprime;
+            		Textarea.update(D);
+            	}
             	else if (action == "activeUsers" && clientId == "server"){
             		var activeUsers = JSON.parse(message.content);
             		for (var i = 0; i < activeUsers.length; i++) {
             			updateUserStatus(activeUsers[i], 'online');
             		}
+            	} else if (action == "ACK" && clientId == "server"){
+            		A = combine(A, X);
+            		var newmessage = {
+                			"clientid": $('#userid').val(),
+                			"action" : "newChange",
+                			"content": JSON.stringify(Y)
+                	};
+                               
+		            Coeditor.socket.send(newmessage);  
+            		X = Y;
+            		Y = null;		
+            	} else if (action == "open" && clientId == "server"){
+            		A = JSON.parse(message.content);
+            		Textarea.update(message.content);
             	}
             };
         });
@@ -361,11 +428,25 @@
         	else
         		Y = combine(Y, changeset);
         	
-        	var jset = JSON.stringify(Y);
-        	Console.log(jset);
+        	if(X == null){
+        		var newmessage = {
+            			"clientid": $('#userid').val(),
+            			"action" : "newChange",
+            			"content": JSON.stringify(Y)
+            	};
+                           
+	            Coeditor.socket.send(newmessage);  
+        		X = Y;
+        		var jset = JSON.stringify(Y);
+            	Console.log(jset);
+        		Y = null;		
+        	}
+        	
+        	
         }
         
         
+
         function combine(fset, sset){
         	var lastIndex = 0;
         	var fnew = fset.newLength;
@@ -603,6 +684,109 @@
         		}       		
         	}
         	return change;
+        }
+        
+        
+        function follow(fset, sset){
+        	if(fset.oldLength != sset.oldLength){
+        		alert("cannot compute follow!");
+        	}
+        	var oldLength = fset.oldLength;
+        	var newLength = 0;
+        	var i = 0;
+        	var j = 0;
+        	var flist = fset.changeList;
+        	var slist = sset.changeList;
+        	var flen = flist.length;
+        	var slen = slist.length;
+        	var newlist = new Array();
+        	var count = 0;
+        	var changeset;
+        	while(i < flen && j < slen){
+        		if(flist[i].type == 0){
+        			newlist[count] = flist[i];
+        			count++;
+        			newLength += flist[i].length;
+        			i++;
+        			continue;
+        		}
+        		if(slist[j].type == 0){
+        			newlist[count] = slist[j];
+        			count++;
+        			newLength += slist[j].length;
+        			j++;
+        			continue;
+        		}
+        		var fstart, fend, sstart, send;
+        		var fcontent = flist[i].content;
+        		var scontent = slist[j].content;
+        		if(flist[i].length == 1){
+					fstart = fend = parseInt(fcontent);        						 
+				} else {
+					var tmp = fcontent.split("-");
+					fstart = parseInt(tmp[0]);
+					fend = parseInt(tmp[1]);
+				}
+        		if(slist[j].length == 1){
+					sstart = send = parseInt(scontent);        						 
+				} else {
+					var tmp = scontent.split("-");
+					sstart = parseInt(tmp[0]);
+					send = parseInt(tmp[1]);
+				}
+        		if(fend < sstart){
+        			i++;
+        		} else if(send < fstart){
+        			j++;
+        		} else if(sstart == fend){
+        			var change = {
+        					"type" : 1,
+        					"length" : 1,
+        					"content" : sstart
+        			};
+        			newlist[count] = change;
+        			count++;
+        			i++;
+        			newLength += 1;
+        		} else if(fstart == send){
+        			var change = {
+        					"type" : 1,
+        					"length" : 1,
+        					"content" : fstart
+        			};
+        			newlist[count] = change;
+        			count++;
+        			j++;
+        			newLength += 1;
+        		} else if (sstart < fend){
+        			var change = {
+        					"type" : 1,
+        					"length" : (fend - sstart + 1),
+        					"content" : sstart + "-" + fend
+        			};
+        			newlist[count] = change;
+        			count++;
+        			i++;
+        			newLength += change.length;
+        		} else if (fstart < send){
+        			var change = {
+        					"type" : 1,
+        					"length" : (send - fstart + 1),
+        					"content" : fstart + "-" + send
+        			};
+        			newlist[count] = change;
+        			count++;
+        			j++;
+        			newLength += change.length;
+        		}
+        	}
+        	
+        	changeset = {
+        			"oldLength" : oldLength,
+        			"newLength" : newLength,
+        			"changeList" : newlist
+        	};
+        	return changeset;
         }
         
         
