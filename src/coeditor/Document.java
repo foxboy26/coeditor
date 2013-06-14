@@ -93,7 +93,8 @@ public class Document {
 		ChangeSet result = cs;
 		
 		for (int i = revisionNumber + 1; i <= headRevision; i++) {
-			result = ChangeSet.follows(this.revisionList.get(i).changeSet, cs);
+			System.out.println("applyChange: " + result);
+			result = ChangeSet.follows(this.revisionList.get(i).changeSet, result);
 		}
 		
 		return result;

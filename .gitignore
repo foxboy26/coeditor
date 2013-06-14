@@ -7,4 +7,4 @@ a.out
 .DS_Store
 AwsCredentials.properties
 build/
-web/
+web/*

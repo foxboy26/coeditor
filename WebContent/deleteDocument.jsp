@@ -20,12 +20,12 @@
 
 		String docName = request.getParameter("docName");
 
-		System.out.println("delete file : " + docName);
+		//System.out.println("delete file : " + docName);
 
 		if (docName != null) {
 			conn.setAutoCommit(false);
 
-			System.out.println("begin db");
+			//System.out.println("begin db");
 
 			//delete share
       String docId = "";
@@ -47,7 +47,7 @@
         pstmt.executeUpdate();
       }
 
-			System.out.println("share");
+			//System.out.println("share");
 			// Commit transaction
 			conn.commit();
 			conn.setAutoCommit(true);

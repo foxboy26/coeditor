@@ -3,6 +3,8 @@
 	var Y = null;
 	var revisionNum = 0;
 
+	var updateUserStatusHandler = null;
+	var saveHandler = null;
 
 	var Coeditor = {};
 
@@ -128,18 +130,20 @@
             	}
             	else if (action == "activeUsers" && clientId == "server"){
             		var activeUsers = JSON.parse(message.content);
+            		$('#userlist li span').removeClass('label-success');
             		for (var i = 0; i < activeUsers.length; i++) {
             			updateUserStatus(activeUsers[i], 'online');
             		}
             	} else if (action == "ACK" && clientId == "server"){
             		Console.log("ACK received");
             		A = combine(A, X);
+            		revisionNum = message.revisionNumber;
             		if (Y != null) {
 	            		var newmessage = {
 	                			"clientId": $('#userid').val(),
 	                			"action" : "newChange",
 	                			"content": JSON.stringify(Y),
-	                			 "revisionNumber" : revisionNum
+	                			"revisionNumber" : revisionNum
  	                	};
 	                               
 			            Coeditor.socket.send(JSON.stringify(newmessage));
@@ -150,6 +154,11 @@
             	} else if (action == "open" && clientId == "server"){
             		A = JSON.parse(message.content);
             		Textarea.update(A);
+            		revisionNum = message.revisionNumber;
+            	} else if (action == "save" && clientId == "server") {
+                    $('#info').text('Last time saved at ' + message.content);
+            	} else {
+            		Console.log("Error: unknown action");
             	}
             };
         });
@@ -229,8 +238,6 @@
           }
           
           getUserList(docId);
-
-          //$('#' + docId).addClass('active');
           
           $('#title').text(docId);
 
@@ -248,21 +255,21 @@
 
           Coeditor.socket.send(jmessage); 				            				          				            
 
-          setInterval(
+          getActiveUsers(docId);
+          
+          updateUserStatusHandler = setInterval(
             function() {
               getActiveUsers(docId);
             },
-            2000
+            10000
           );
           
-          setInterval(
+          saveHandler = setInterval(
             function() { 
               saveDocument(docId);
             }, 
             60000
           );
-          
-          $('#coeditor').setCaretPosition(3);
         }
 
         function getActiveUsers(docName) {
@@ -325,9 +332,7 @@
 
           Console.log('Info: [save request]' + jmessage);
 
-          //Coeditor.socket.send(jmessage); 				            				          				            
-          
-          $('#info').text('Last time saved at ' + new Date().toTimeString());
+          Coeditor.socket.send(jmessage); 				            				          				            
         }
 
         function deleteDocument(docName) {
@@ -348,6 +353,12 @@
         			Coeditor.socket.send(jmessage);
         			
         			$('#' + docName).remove();
+        			
+        			$('#coeditor').val("");
+        			$('#title').val("Title");
+        			
+        			window.clearInterval(updateUserStatusHandler);
+        			window.clearInterval(saveHandler);
         		}
             });
 		}
@@ -378,6 +389,11 @@
     			Console.log('Info: [close request]' + jmessage);
     			
     			Coeditor.socket.send(jmessage);
+    			
+    			revisionNum = 0;
+    			
+    			window.clearInterval(updateUserStatusHandler);
+    			window.clearInterval(saveHandler);
         }
         
         function updateFileList(docId) {
