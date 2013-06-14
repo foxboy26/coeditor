@@ -150,7 +150,7 @@
 	                			"clientId": $('#userid').val(),
 	                			"action" : "newChange",
 	                			"content": JSON.stringify(Y),
-	                			 "revisionNumber" : revisionNum
+	                			"revisionNumber" : revisionNum
  	                	};
 	                               
 			            Coeditor.socket.send(JSON.stringify(newmessage));
@@ -161,6 +161,11 @@
             	} else if (action == "open" && clientId == "server"){
             		A = JSON.parse(message.content);
             		Textarea.update(A);
+            		revisionNum = message.revisionNumber;
+            	} else if (action == "save" && clientId == "server") {
+                    $('#info').text('Last time saved at ' + message.content);
+            	} else {
+            		Console.log("Error: unknown action");
             	}
             };
         });
@@ -334,9 +339,7 @@
 
           Console.log('Info: [save request]' + jmessage);
 
-          //Coeditor.socket.send(jmessage); 				            				          				            
-          
-          $('#info').text('Last time saved at ' + new Date().toTimeString());
+          Coeditor.socket.send(jmessage); 				            				          				            
         }
 
         function deleteDocument(docName) {
@@ -357,6 +360,9 @@
         			Coeditor.socket.send(jmessage);
         			
         			$('#' + docName).remove();
+        			
+        			$('#coeditor').val("");
+        			$('#title').val("Title");
         		}
             });
 		}
@@ -387,6 +393,8 @@
     			Console.log('Info: [close request]' + jmessage);
     			
     			Coeditor.socket.send(jmessage);
+    			
+    			revisionNum = 0;
         }
         
         function updateFileList(docId) {

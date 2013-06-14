@@ -21,12 +21,12 @@
 		String userId = request.getParameter("userId");
 		String docName = request.getParameter("docName");
 
-		System.out.println("create file : " + userId + " name: " + docName);
+		//System.out.println("create file : " + userId + " name: " + docName);
 
 		if (docName != null) {
 			conn.setAutoCommit(false);
 
-			System.out.println("begin db");
+			//System.out.println("begin db");
 
 			//update filelist    		
 			pstmt = conn
@@ -35,7 +35,7 @@
 			pstmt.setString(2, "C://" + docName + '"');
 			pstmt.executeUpdate();
 
-			System.out.println("store in filelist");
+			//System.out.println("store in filelist");
 
 			//get docid
 			String docId = "";
@@ -49,7 +49,7 @@
 				session.setAttribute("docId", docId);
 			}
 
-			System.out.println("get id");
+			//System.out.println("get id");
 
 			//update share
 			pstmt = conn
@@ -59,7 +59,7 @@
 			pstmt.setBoolean(3, true);
 			pstmt.executeUpdate();
 
-			System.out.println("share");
+			//System.out.println("share");
 			// Commit transaction
 			conn.commit();
 			conn.setAutoCommit(true);

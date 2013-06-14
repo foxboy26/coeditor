@@ -3,6 +3,8 @@ package coeditor;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.Map;
@@ -60,7 +62,9 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
 
       @Override
       protected void onClose(int status) {
-          
+        
+      	System.out.println("close connection: status: " + status);
+      	
         closeDocument();
         
         connections.remove(this);
@@ -100,12 +104,15 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
         else if (action != null && action.equals("open")) {
           // step 1: open document for client
           String docId = msg.content;
+          
+        	log(clientId, action, "docId: " + docId);
+          
           if (openDocument(docId, clientId)) {
           // step 2: send back HEADTEXT
             String headText = documents.get(docId).headText;
             ChangeSet testChangeSet = new ChangeSet(headText);
 
-            Message response = new Message("server", "open", gson.toJson(testChangeSet));
+            Message response = new Message("server", "open", gson.toJson(testChangeSet), document.headRevision);
             sendMessage(gson.toJson(response));
 
           } else {
@@ -115,25 +122,47 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
             sendErrorMessage("[open] error: file cannot be opened.");
           }
         } else if (action != null && action.equals("close")) {
-          
-          closeDocument();
-          
-          Message response = new Message("server", "close", "close");
-          sendMessage(gson.toJson(response));
-        
+          String docId = msg.content;
+
+        	log(clientId, action, "docId: " + docId);
+        	
+        	if (document == null || !document.isOpen)
+          	log(clientId, "error", "docId: " + docId + " is not open");
+          else if (!docId.equals(document.docId))
+          	log(clientId, "error", "docId: " + docId + " is not same as the existing " + document.docId);
+          else {
+          	closeDocument();
+          }
+        	
+          //Message response = new Message("server", "close", "closed");
+          //sendMessage(gson.toJson(response));
         } else if (action != null && action.equals("save")) {
           
-          saveDocument();
+          String docId = msg.content;
           
-          Message response = new Message("server", "save", "");
-          sendMessage(gson.toJson(response));
+        	log(clientId, action, "docId: " + docId);
+          
+          if (document == null || !document.isOpen)
+          	log(clientId, "error", "docId: " + docId + " is not open");
+          else if (!docId.equals(document.docId))
+          	log(clientId, "error", "docId: " + docId + " is not same as the existing " + document.docId);
+          else {
+          	saveDocument();
+          	
+          	SimpleDateFormat ft = new SimpleDateFormat ("hh:mm:ss a");
+	          Message response = new Message("server", "save", ft.format(new Date()));
+	          sendMessage(gson.toJson(response));
+          }
         
         } else if (action != null && action.equals("delete")) {
           String docId = msg.content;
 
-          System.out.println("hhahaa");
+          log(clientId, action, "docId: " + docId);
           
         	deleteDocument(docId);
+        	
+        	Message response = new Message("server", "delete", docId);
+        	broadcast(gson.toJson(response));
         	
         } else if (action != null && action.equals("newChange")) {
          
@@ -224,8 +253,6 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
       	if (document != null && document.docId.equals(docId))
       		closeDocument();
       	
-      	System.out.println("delete");
-      	
       	s3.deleteKey(docId);
       	
       	return true;
@@ -261,6 +288,10 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
         	if (t != connectionId)
         		connections.get(t).sendMessage(message);
         }
+      }
+      
+      private void log(String client, String action, String message) {
+      	System.out.println("[" + client + "] " + action + ": " + message);
       }
   }
 }
