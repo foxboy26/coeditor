@@ -58,11 +58,11 @@
 	}
 
     
-    pstmt = conn.prepareStatement(
+   pstmt = conn.prepareStatement(
       "select filelist.name, filelist.id from users, share, filelist " + 
       "where username = ? and users.id = share.user and share.file = filelist.id");
     pstmt.setString(1, username);
-    rs = pstmt.executeQuery();
+    rs = pstmt.executeQuery();  
 %>
 	<div>
     <input type="hidden" name="userid" value=<%=userid%> id="userid" />
@@ -95,7 +95,7 @@
 				<div class="well sidebar-nav">
 					<ul class="nav nav-list" id="filelist">
 						<li class="nav-header">Filelist</li>
-						<%
+			 			<%
       				while(rs.next()){
       					String file = rs.getString("name");
       					int id = rs.getInt("id");
@@ -109,7 +109,7 @@
             </li>
 						<%
       				}
-				%>
+				%> 
 					</ul>
 				</div>
 			</div>
@@ -168,7 +168,7 @@
 	<%-- -------- Close Connection Code -------- --%>
 	<%
 		// Close the ResultSet
-		  rs.close();
+		 rs.close();
 
 		  // Close the Statement
 		  pstmt.close();

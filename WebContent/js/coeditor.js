@@ -20,57 +20,47 @@
 
             Coeditor.socket.onopen = function () {
                 Console.log('Info: WebSocket connection opened.');
-                /*var list1 = new Array();
+                var list1 = new Array();
                 list1[0] = {
                 		"type" : 1,
-                		"length" : 2,
-                		"content" : "0-1"
+                		"length" : 13,
+                		"content" : "0-12"
                 };
                 
                 list1[1] = {
                 		"type" : 0,
-                		"length" : 2,
-                		"content" : "si"
+                		"length" : 1,
+                		"content" : "a"
                 };
                 
                 list1[2] = {
                 		"type" : 1,
-                		"length" : 1,
-                		"content" : "7"
+                		"length" : 15,
+                		"content" : "13-27"
                 };
                 
                 var a = {
-                		"oldLength" : 8,
-                		"newLength" : 5,
+                		"oldLength" : 27,
+                		"newLength" : 28,
                 		"changeList" : list1
                 };
                 
                 var list2 = new Array();
                 list2[0] = {
                 		"type" : 1,
-                		"length" : 1,
-                		"content" : "0"
+                		"length" : 28,
+                		"content" : "0-27"
                 };
                 
                 list2[1] = {
                 		"type" : 0,
                 		"length" : 1,
-                		"content" : "e"
+                		"content" : "f"
                 };
                 
-                list2[2] = {
-                		"type" : 1,
-                		"length" : 1,
-                		"content" : "6"
-                };
-                list2[3] = {
-                		"type" : 0,
-                		"length" : 2,
-                		"content" : "ow"
-                };
                 var b = {
-                		"oldLength" : 8,
-                		"newLength" : 5,
+                		"oldLength" : 27,
+                		"newLength" : 28,
                 		"changeList" : list2
                 };
                 
@@ -78,7 +68,7 @@
                 var test2 = follow(b,a);
                 
                 Console.log(JSON.stringify(test1));
-                Console.log(JSON.stringify(test2));*/
+                Console.log(JSON.stringify(test2));
                 
                 $('#coeditor').keypress(function(event) {
                 	
@@ -785,7 +775,7 @@
             	while(i < flen && j < slen){
             		if(flist[i].type == 0){
             			var change;
-            			if(flist[i].content.length == 1){
+            			if(flist[i].length == 1){
             				change = {
             						"type" : 1,
             						"length" : 1,
@@ -832,55 +822,76 @@
     	    					sstart = parseInt(tmp[0]);
     	    					send = parseInt(tmp[1]);
     	    				}
+    	            				
     	            		
-    	            		if(fend < sstart){
-    	            			retain += flist[i].length;
-    	            			i++;
-    	            		} else if(send < fstart){
+    	            		if(send < fstart){
     	            			j++;
-    	            		} else if(sstart == fend){
-    	            			var change = {
-    	            					"type" : 1,
-    	            					"length" : 1,
-    	            					"content" : sstart
-    	            			};
-    	            			newlist[count] = change;
-    	            			count++;
-    	            			retain += flist[i].length;
-    	            			i++;
-    	            			newLength += 1;
     	            		} else if(fstart == send){
     	            			var change = {
     	            					"type" : 1,
     	            					"length" : 1,
-    	            					"content" : fstart
+    	            					"content" : retain
     	            			};
     	            			newlist[count] = change;
     	            			count++;
     	            			j++;
     	            			newLength += 1;
-    	            		} else if (sstart < fend){
+    	            		} else if (sstart <= fstart && send > fstart && send < fend){
     	            			var change = {
     	            					"type" : 1,
-    	            					"length" : (fend - sstart + 1),
-    	            					"content" : sstart + "-" + fend
+    	            					"length" : (send - fstart + 1),
+    	            					"content" : retain + "-" + (retain + send - fstart)
+    	            			};
+    	            			newlist[count] = change;
+    	            			count++;
+    	            			j++;
+    	            			newLength += change.length;
+    	            		} else if (sstart <= fstart && send >= fend){
+    	            			var change = {
+    	            					"type" : 1,
+    	            					"length" : flist[i].length,
+    	            					"content" : retain + "-" + (retain + flist[i].length - 1)
     	            			};
     	            			newlist[count] = change;
     	            			count++;
     	            			retain += flist[i].length;
     	            			i++;
     	            			newLength += change.length;
-    	            		} else if (fstart < send){
+    	            		} else if(fstart < sstart && fend > send){
     	            			var change = {
     	            					"type" : 1,
-    	            					"length" : (send - fstart + 1),
-    	            					"content" : fstart + "-" + send
+    	            					"length" : slist[j].length,
+    	            					"content" : (retain + sstart - fstart) + "-" + (retain + send - fstart)
     	            			};
     	            			newlist[count] = change;
     	            			count++;
+    	            			newLength += slist[j].length;
     	            			j++;
-    	            			newLength += change.length;
-    	            		}
+    	            		} else if(fstart < sstart && fend <= send){
+    	            			var change = {
+    	            					"type" : 1,
+    	            					"length" : slist[j].length,
+    	            					"content" : (retain + sstart - fstart) + "-" + (retain + flist[i].length - 1)
+    	            			};
+    	            			newlist[count] = change;
+    	            			count++;
+    	            			newLength += slist[j].length;
+    	            			i++;
+    	            		} else if(sstart == fend){
+    	            			var change = {
+    	            					"type" : 1,
+    	            					"length" : 1,
+    	            					"content" : (retain + flist[i].length - 1)
+    	            			};
+    	            			newlist[count] = change;
+    	            			count++;
+    	            			retain += flist[i].length;
+    	            			i++;
+    	            			newLength += 1;
+    	            		} else if(fend < sstart){
+    	            			retain += flist[i].length;
+    	            			i++;
+    	            		}  
             			}
                 		
             		}
