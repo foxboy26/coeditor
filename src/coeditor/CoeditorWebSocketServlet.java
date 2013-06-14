@@ -49,12 +49,13 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
     
       private CoeditorMessageInbound(int id) {
         this.connectionId = id;
+        this.document = null;
       }
 
       @Override
       protected void onOpen(WsOutbound outbound) {
 
-      	System.out.println("new connection: " + connectionId);
+        log(Integer.toString(connectionId), "onOpen", "new client connection");
       	
         connections.put(connectionId, this);
 
@@ -62,12 +63,12 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
 
       @Override
       protected void onClose(int status) {
-        
-      	System.out.println("close connection: status: " + status);
-      	
+              	
         closeDocument();
         
         connections.remove(this);
+        
+        log(Integer.toString(connectionId), "onClose", "active user " + document.getActiveUser().toString());
       }
 
       @Override
@@ -189,7 +190,7 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
           //document.updateClientVersion();
         } else if (action != null && action.equals("getActiveUsers")) {
         	String docId = msg.content;
-        	System.out.println(getActiveUsers(docId));
+        	log(clientId, action, getActiveUsers(docId));
         	Message response = new Message("server", "activeUsers", getActiveUsers(docId));
         	sendMessage(gson.toJson(response));
         }
@@ -225,6 +226,7 @@ public class CoeditorWebSocketServlet extends WebSocketServlet {
         }
         else {
           document = documents.get(docId);
+          log(clientId, "openDocument", document.docId + " and " + docId);
         }
 
         document.open(connectionId, clientId);
